@@ -219,6 +219,10 @@
         }
     }
 
+    if (exception == nil) {
+        exception = [NSException exceptionWithName:@"XNKeyValueExtractorUnknownException" reason:@"dunno" userInfo:nil];
+    }
+
     value = previousValue;
 
     NSString *initialRemainingKey = [remainingComponents objectAtIndex:0];

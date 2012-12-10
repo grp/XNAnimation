@@ -71,7 +71,9 @@
     NSMutableSet *animations = [_activeAnimations objectForKey:value];
     [animations removeObject:animation];
 
-    [animation reset];
+    if ([animation active]) {
+        [animation end];
+    }
 
     if ([animations count] == 0) {
         [_activeAnimations removeObjectForKey:value];

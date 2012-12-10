@@ -45,8 +45,10 @@
 
 @interface XNAnimation (Private)
 
+- (BOOL)active;
 - (void)beginWithTarget:(id)target;
 - (void)simulateWithTimeInterval:(NSTimeInterval)dt;
+- (void)end;
 - (void)reset;
 
 @end

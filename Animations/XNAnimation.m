@@ -29,6 +29,7 @@ const NSTimeInterval kXNAnimationDefaultDuration = 1.0;
     id _target;
     BOOL _completed;
     id<XNAnimationDelegate> _delegate;
+    BOOL _delegateWantsProgress;
 
     NSArray *_durations;
     NSArray *_velocities;
@@ -51,6 +52,12 @@ const NSTimeInterval kXNAnimationDefaultDuration = 1.0;
 @synthesize velocity = _velocity;
 
 #pragma mark - Lifecycle
+
+- (void)setDelegate:(id<XNAnimationDelegate>)delegate {
+    _delegate = delegate;
+
+    _delegateWantsProgress = [_delegate respondsToSelector:@selector(animationUpdated:)];
+}
 
 + (id)animation {
     XNAnimation *animation = [[[self alloc] init] autorelease];
@@ -116,8 +123,6 @@ const NSTimeInterval kXNAnimationDefaultDuration = 1.0;
 
 #pragma mark - Animation
 
-static NSTimeInterval t = 0;
-
 - (void)beginWithTarget:(id)target {
     _completed = NO;
     _target = target;
@@ -158,8 +163,9 @@ static NSTimeInterval t = 0;
         _durations = [durations retain];
     }
 
-    [_delegate animationStarted:self];
-    t = [NSDate timeIntervalSinceReferenceDate];
+    if ([_delegate respondsToSelector:@selector(animationStarted:)]) {
+        [_delegate animationStarted:self];
+    }
 }
 
 - (void)simulateWithTimeInterval:(NSTimeInterval)dt {
@@ -168,7 +174,21 @@ static NSTimeInterval t = 0;
     id value = [_extractor objectFromComponents:positions templateObject:_toValue];
     [_extractor object:_target setValue:value forKeyPath:_keyPath];
 
-    [_delegate animationUpdated:self];
+    if (_delegateWantsProgress) {
+        [_delegate animationUpdated:self];
+    }
+}
+
+- (void)end {
+    if ([_delegate respondsToSelector:@selector(animationStopped:)]) {
+        [_delegate animationStopped:self];
+    }
+
+    [self reset];
+}
+
+- (BOOL)active {
+    return _target != nil;
 }
 
 - (void)reset {

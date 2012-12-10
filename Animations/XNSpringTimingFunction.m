@@ -28,7 +28,7 @@
 
 - (id)init {
     if ((self = [super init])) {
-        _k = 100;
+        _k = 273;
         _b = 20;
         _m = 1;
     }
