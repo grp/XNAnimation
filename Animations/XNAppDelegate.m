@@ -81,30 +81,28 @@ UISlider *_m, *_b, *_k;
     [label setTextAlignment:NSTextAlignmentCenter];
     [self.window addSubview:label];
 
-    h = 40;
-
-    sdl = [[UISlider alloc] initWithFrame:CGRectMake(10, self.window.bounds.size.height - 35 - h - 10 - 20, self.window.bounds.size.width - 20, 20)];
+    sdl = [[UISlider alloc] initWithFrame:CGRectMake(10, self.window.bounds.size.height - 25 - h - 10 - 20, self.window.bounds.size.width - 20, 20)];
     [sdl setMinimumValue:0.0];
     [sdl setMaximumValue:0.2];
     [sdl setValue:0.01];
     [sdl setHidden:YES];
     [self.window addSubview:sdl];
 
-    _m = [[UISlider alloc] initWithFrame:CGRectMake(10, self.window.bounds.size.height - 35 - h - 10 - 20, self.window.bounds.size.width - 20, 20)];
+    _m = [[UISlider alloc] initWithFrame:CGRectMake(10, self.window.bounds.size.height - 25 - h - 10 - 20, self.window.bounds.size.width - 20, 20)];
     [_m setMinimumValue:0.0];
     [_m setMaximumValue:10.0f];
     [_m setValue:1.0f];
     [_m setHidden:NO];
     [self.window addSubview:_m];
 
-    _b = [[UISlider alloc] initWithFrame:CGRectMake(10, self.window.bounds.size.height - 35 - h - h - 10 - 20, self.window.bounds.size.width - 20, 20)];
+    _b = [[UISlider alloc] initWithFrame:CGRectMake(10, self.window.bounds.size.height - 55 - h - 10 - 20, self.window.bounds.size.width - 20, 20)];
     [_b setMinimumValue:0.0];
     [_b setMaximumValue:100.0f];
     [_b setValue:20.0f];
     [_b setHidden:NO];
     [self.window addSubview:_b];
 
-    _k = [[UISlider alloc] initWithFrame:CGRectMake(10, self.window.bounds.size.height - 35 - h - h - h - 10 - 20, self.window.bounds.size.width - 20, 20)];
+    _k = [[UISlider alloc] initWithFrame:CGRectMake(10, self.window.bounds.size.height - 85 - h - 10 - 20, self.window.bounds.size.width - 20, 20)];
     [_k setMinimumValue:0.0];
     [_k setMaximumValue:1000.0f];
     [_k setValue:273.0f];
