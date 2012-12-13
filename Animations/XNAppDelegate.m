@@ -36,6 +36,8 @@ CGPoint p;
 UISlider *sdl;
 
 
+UISlider *_m, *_b, *_k;
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     self.window = [[[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]] autorelease];
@@ -66,7 +68,7 @@ UISlider *sdl;
     s = [[UISegmentedControl alloc] initWithItems:[NSArray arrayWithObjects:@"Spring", @"Decay", @"Bezier", @"Linear", @"Appear", nil]];
     CGFloat h = 50;
     if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone) h = 30;
-    [s setFrame:CGRectMake(10, self.window.bounds.size.height - 10 - h, self.window.bounds.size.width - 20, h)];
+    [s setFrame:CGRectMake(10, self.window.bounds.size.height - 20 - h, self.window.bounds.size.width - 20, h)];
     [s setAutoresizingMask:UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth];
     if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone) [s setSegmentedControlStyle:UISegmentedControlStyleBar];
     [s addTarget:self action:@selector(sch:) forControlEvents:UIControlEventValueChanged];
@@ -79,12 +81,35 @@ UISlider *sdl;
     [label setTextAlignment:NSTextAlignmentCenter];
     [self.window addSubview:label];
 
-    sdl = [[UISlider alloc] initWithFrame:CGRectMake(10, self.window.bounds.size.height - 10 - h - 10 - 20, self.window.bounds.size.width - 20, 20)];
+    h = 40;
+
+    sdl = [[UISlider alloc] initWithFrame:CGRectMake(10, self.window.bounds.size.height - 35 - h - 10 - 20, self.window.bounds.size.width - 20, 20)];
     [sdl setMinimumValue:0.0];
-    [sdl setValue:0.01];
     [sdl setMaximumValue:0.2];
+    [sdl setValue:0.01];
     [sdl setHidden:YES];
     [self.window addSubview:sdl];
+
+    _m = [[UISlider alloc] initWithFrame:CGRectMake(10, self.window.bounds.size.height - 35 - h - 10 - 20, self.window.bounds.size.width - 20, 20)];
+    [_m setMinimumValue:0.0];
+    [_m setMaximumValue:10.0f];
+    [_m setValue:1.0f];
+    [_m setHidden:NO];
+    [self.window addSubview:_m];
+
+    _b = [[UISlider alloc] initWithFrame:CGRectMake(10, self.window.bounds.size.height - 35 - h - h - 10 - 20, self.window.bounds.size.width - 20, 20)];
+    [_b setMinimumValue:0.0];
+    [_b setMaximumValue:100.0f];
+    [_b setValue:20.0f];
+    [_b setHidden:NO];
+    [self.window addSubview:_b];
+
+    _k = [[UISlider alloc] initWithFrame:CGRectMake(10, self.window.bounds.size.height - 35 - h - h - h - 10 - 20, self.window.bounds.size.width - 20, 20)];
+    [_k setMinimumValue:0.0];
+    [_k setMaximumValue:1000.0f];
+    [_k setValue:273.0f];
+    [_k setHidden:NO];
+    [self.window addSubview:_k];
 
     /*id a = [[XNKeyValueExtractor alloc] init];
     NSLog(@"native: %@", [sb.layer valueForKeyPath:@"transform.translation"]);
@@ -110,6 +135,9 @@ UISlider *sdl;
     static int o = 0;
 
     [sdl setHidden:(i != 1)];
+    [_k setHidden:(i != 0)];
+    [_b setHidden:(i != 0)];
+    [_m setHidden:(i != 0)];
     
     o = i;
 }
@@ -118,7 +146,7 @@ UISlider *sdl;
     int i = [s selectedSegmentIndex];
     if (i == 0) {
         *vel = YES;
-        return [XNSpringTimingFunction timingFunctionWithTension:273 damping:23 mass:1.0];
+        return [XNSpringTimingFunction timingFunctionWithTension:[_k value] damping:[_b value] mass:[_m value]];
     } else if (i == 1) {
         *vel = YES;
         return [XNDecayTimingFunction timingFunctionWithConstant:[sdl value]];
