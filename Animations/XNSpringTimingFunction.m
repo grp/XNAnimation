@@ -41,7 +41,7 @@
 
     CGFloat t = [self elapsed];
 
-    // The equation below is sprining around zero, so invert it.
+    // The equation below is springing around zero, so invert it.
     CGFloat xF = (to - from);
 
     CGFloat x0 = xF;
@@ -49,16 +49,33 @@
     CGFloat w0 = sqrtf(_k / _m);
 
     CGFloat zeta = _b / (2 * sqrtf(_m * _k));
-    CGFloat wD = w0 * sqrtf(1 - zeta * zeta);
+    CGFloat x = 0;
 
-    CGFloat A = x0;
-    CGFloat B = (zeta * w0 * x0 + v0) / wD;
+    if (zeta < 1.0f) {
+        CGFloat wD = w0 * sqrtf(1 - zeta * zeta);
 
-    CGFloat x = powf(M_E, -zeta * w0 * t) * (A * cos(wD * t) + B * sin(wD * t));
+        CGFloat A = x0;
+        CGFloat B = (zeta * w0 * x0 + v0) / wD;
+
+        x = powf(M_E, -zeta * w0 * t) * (A * cos(wD * t) + B * sin(wD * t));
+    } else if (zeta == 1.0f) {
+        CGFloat A = x0;
+        CGFloat B = v0 * w0 * x0;
+
+        x = powf(M_E, -w0 * t) * (A + B * t);
+    } else if (zeta > 1.0f) {
+        CGFloat gP = (-_b + sqrtf(powf(_b, 2) - 4 * w0)) / 2;
+        CGFloat gM = (-_b - sqrtf(powf(_b, 2) - 4 * w0)) / 2;
+
+        CGFloat A = x0 - (gM * x0 - v0) / (gM - gP);
+        CGFloat B = (gM * x0 - v0) / (gM - gP);
+
+        x = A * powf(M_E, gM * t) + B * powf(M_E, gP * t);
+    }
 
     x = from + (xF - x);
 
-    if (fabs(x - to) <= 0) {
+    if (fabs(x - to) <= 0.01) {
         *outComplete = YES;
         return to;
     } else {

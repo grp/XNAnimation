@@ -33,7 +33,7 @@
 - (id)init {
     if ((self = [super init])) {
         _displayLink = [[CADisplayLink displayLinkWithTarget:self selector:@selector(frameFromDisplayLink:)] retain];
-        [_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+        [_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
 
         _activeAnimations = [[NSMutableDictionary alloc] init];
 

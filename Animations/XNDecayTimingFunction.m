@@ -35,7 +35,7 @@
 
     x = from + x;
 
-    NSLog(@"from %f, velocity %f, to %f", from, velocity, x);
+    //NSLog(@"from %f, velocity %f, to %f", from, velocity, x);
     return x;
 }
 
@@ -95,7 +95,7 @@
     CGFloat v = v0 * powf(M_E, -c * t);
     CGFloat x = from + v0 * (1 - powf(M_E, -c * t)) / c;
 
-    NSLog(@"x = %f, v = %f; initial %f; v / v0 = %f", x - from, v, v0, v / v0);
+    //NSLog(@"x = %f, v = %f; initial %f; v / v0 = %f", x - from, v, v0, v / v0);
 
     if (fabs(x - to) <= 0.05) {
         *outComplete = YES;
