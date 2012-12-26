@@ -8,6 +8,10 @@
 
 #import "XNSpringTimingFunction.h"
 
+const static CGFloat kXNSpringTimingFunctionDefaultTension = 273.0f;
+const static CGFloat kXNSpringTimingFunctionDefaultDamping = 20.0f;
+const static CGFloat kXNSpringTimingFunctionDefaultMass = 1.0f;
+
 @implementation XNSpringTimingFunction {
     CGFloat _k; // tension
     CGFloat _b; // damping
@@ -26,20 +30,28 @@
     return spring;
 }
 
+- (id)copyWithZone:(NSZone *)zone {
+    id copy = [super copyWithZone:zone];
+    [copy setTension:[self tension]];
+    [copy setDamping:[self damping]];
+    [copy setMass:[self mass]];
+    return copy;
+}
+
 - (id)init {
     if ((self = [super init])) {
-        _k = 273;
-        _b = 20;
-        _m = 1;
+        _k = kXNSpringTimingFunctionDefaultTension;
+        _b = kXNSpringTimingFunctionDefaultDamping;
+        _m = kXNSpringTimingFunctionDefaultMass;
     }
 
     return self;
 }
 
-- (CGFloat)simulateWithTimeInterval:(NSTimeInterval)dt velocity:(CGFloat)velocity from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
-    [super simulateWithTimeInterval:dt velocity:velocity from:from to:to complete:outComplete];
+- (CGFloat)simulateWithTimeInterval:(NSTimeInterval)dt elapsed:(NSTimeInterval)elapsed velocity:(CGFloat)velocity from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
+    [super simulateWithTimeInterval:dt elapsed:elapsed velocity:velocity from:from to:to complete:outComplete];
 
-    CGFloat t = [self elapsed];
+    CGFloat t = elapsed;
 
     // The equation below is springing around zero, so invert it.
     CGFloat xF = (to - from);
@@ -85,67 +97,3 @@
 }
 
 @end
-
-/*typedef struct {
-    CGFloat x; // position
-    CGFloat v; // velocity
-} State;
-
-typedef struct {
-    CGFloat dx; // derivative of position: velocity
-    CGFloat dv; // derivative of velocity: acceleration
-} Derivative;
-
-- (CGFloat)accelerationAtState:(State)s {
-    return ((-_k * (s.x - 1.0f)) - (_b * s.v)) / _m;
-}
-
-- (Derivative)evaluateAtState:(State)initial timeDelta:(NSTimeInterval)dt derivative:(Derivative)d {
-    State state;
-    state.x = initial.x + d.dx * dt;
-    state.v = initial.v + d.dv * dt;
-
-    Derivative output;
-    output.dx = state.v;
-    output.dv = [self accelerationAtState:state];
-    return output;
-}
-
-- (State)integrateWithTimeDelta:(NSTimeInterval)dt {
-    Derivative _ = { 0 };
-    Derivative a = [self evaluateAtState:_s timeDelta:0.0 derivative:_];
-    Derivative b = [self evaluateAtState:_s timeDelta:(dt * 0.5f) derivative:a];
-    Derivative c = [self evaluateAtState:_s timeDelta:(dt * 0.5f) derivative:b];
-    Derivative d = [self evaluateAtState:_s timeDelta:dt derivative:c];
-
-    CGFloat dxdt = 1.0f / 6.0f * (a.dx + 2.0f * (b.dx + c.dx) + d.dx);
-    CGFloat dvdt = 1.0f / 6.0f * (a.dv + 2.0f * (b.dv + c.dv) + d.dv);
-
-    State state = _s;
-    state.x = state.x + dxdt * dt;
-    state.v = state.v + dvdt * dt;
-    return state;
-}
-
-- (void)reset {
-    [super reset];
-    
-    _s.x = 0;
-    _s.v = 0;
-}
-
-- (CGFloat)simulateWithTimeInterval:(NSTimeInterval)dt complete:(BOOL *)outComplete {
-    CGFloat px = _s.x;
-    
-    _s = [self integrateWithTimeDelta:dt];
-    [super simulateWithTimeInterval:dt complete:outComplete];
-
-    CGFloat dx = fabs(px - _s.x);
-    if (dx <= _sensitivity) {
-        *outComplete = YES;
-        return 1.0;
-    } else {
-        *outComplete = NO;
-        return _s.x;
-    }
-}*/

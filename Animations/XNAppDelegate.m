@@ -83,8 +83,8 @@ UISlider *_m, *_b, *_k;
 
     sdl = [[UISlider alloc] initWithFrame:CGRectMake(10, self.window.bounds.size.height - 25 - h - 10 - 20, self.window.bounds.size.width - 20, 20)];
     [sdl setMinimumValue:0.0];
-    [sdl setMaximumValue:0.2];
-    [sdl setValue:0.01];
+    [sdl setMaximumValue:1.0f];
+    [sdl setValue:0.998f];
     [sdl setHidden:YES];
     [self.window addSubview:sdl];
 
@@ -136,7 +136,9 @@ UISlider *_m, *_b, *_k;
     [_k setHidden:(i != 0)];
     [_b setHidden:(i != 0)];
     [_m setHidden:(i != 0)];
-    
+
+    [sb.layer setPosition:p];
+
     o = i;
 }
 
@@ -168,7 +170,6 @@ UISlider *_m, *_b, *_k;
 
 - (void)pan:(UIPanGestureRecognizer *)pan {
     UIView *brick = [pan view];
-
 
     if (pan.state == UIGestureRecognizerStateBegan || pan.state == UIGestureRecognizerStateChanged) {
         [brick removeAllXNAnimations];

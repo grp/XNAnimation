@@ -60,6 +60,12 @@
     return timingFunction;
 }
 
+- (id)copyWithZone:(NSZone *)zone {
+    id copy = [super copyWithZone:zone];
+    [copy setControlPoints:[self controlPoints]];
+    return copy;
+}
+
 - (id)init {
     if ((self = [super init])) {
         [self setControlPoints:[[self class] controlPointsEaseInOut]];
@@ -78,12 +84,12 @@
 // Not sure how this works, but it does. Found online somewhere.
 #define nCr(n, r) round(exp((lgamma(n+1)) - (lgamma(r+1) + lgamma(n-r+1))))
 
-- (CGFloat)simulateWithTimeInterval:(NSTimeInterval)dt duration:(CGFloat)duration from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
-    [super simulateWithTimeInterval:dt duration:duration from:from to:to complete:outComplete];
+- (CGFloat)simulateWithTimeInterval:(NSTimeInterval)dt elapsed:(NSTimeInterval)elapsed duration:(CGFloat)duration from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
+    [super simulateWithTimeInterval:dt elapsed:elapsed duration:duration from:from to:to complete:outComplete];
 
     CGPoint result = CGPointZero;
 
-    CGFloat t = ([self elapsed] / duration);
+    CGFloat t = (elapsed / duration);
     NSUInteger n = [_completeControlPoints count] - 1;
     
     for (NSUInteger i = 0; i <= n; i++) {

@@ -9,41 +9,39 @@
 #import "XNKeyValueExtractor.h"
 #import "XNDecayTimingFunction.h"
 
+const static CGFloat kXNDecayTimingFunctionTemporalSensitivity = 1000.0f;
+
+const static CGFloat kXNDecayTimingFunctionDefaultConstant = 0.998f;
+const static CGFloat kXNDecayTimingFunctionDefaultSensitivity = 0.05f;
+
 @implementation XNDecayTimingFunction {
+    CGFloat _sensitivity;
     CGFloat _constant;
 }
 
+@synthesize sensitivity = _sensitivity;
 @synthesize constant = _constant;
 
-+ (CGFloat)toFrom:(CGFloat)from velocity:(CGFloat)velocity constant:(CGFloat)constant {
++ (CGFloat)toFrom:(CGFloat)from velocity:(CGFloat)velocity constant:(CGFloat)constant sensitivity:(CGFloat)sensitivity {
     if (velocity == 0) {
         return from;
     }
 
-    CGFloat sensitivity = 0.05;
-
     CGFloat c = constant;
-    CGFloat v0 = fabs(velocity);
-    CGFloat t = logf(sensitivity / v0) / -c;
+    CGFloat s = sensitivity / kXNDecayTimingFunctionTemporalSensitivity;
+    CGFloat v0 = velocity / kXNDecayTimingFunctionTemporalSensitivity;
+    CGFloat t = logf(s / fabs(v0)) / logf(c) * kXNDecayTimingFunctionTemporalSensitivity;
+    CGFloat x = from + c * v0 * (1 - powf(c, t)) / (1 - c);
 
-    // Integrate up to ending time.
-    CGFloat x = v0 * (1 - powf(M_E, -c * t)) / c;
-
-    if (velocity < 0) {
-        x = -x;
-    }
-
-    x = from + x;
-
-    //NSLog(@"from %f, velocity %f, to %f", from, velocity, x);
     return x;
 }
 
-+ (id)toValueFromValue:(id)from forVelocity:(id)velocity withConstant:(CGFloat)constant {
++ (id)toValueFromValue:(id)from forVelocity:(id)velocity withConstant:(CGFloat)constant sensitivity:(CGFloat)sensitivity {
     XNKeyValueExtractor *kve = [[XNKeyValueExtractor alloc] init];
 
     NSArray *velocityComponents = [kve componentsForObject:velocity];
     NSArray *fromComponents = [kve componentsForObject:from];
+    
     NSMutableArray *toComponents = [NSMutableArray array];
 
     for (NSInteger i = 0; i < [fromComponents count]; i++) {
@@ -53,7 +51,7 @@
         CGFloat v = [velocityValue floatValue];
         CGFloat f = [fromValue floatValue];
         
-        CGFloat to = [self toFrom:f velocity:v constant:constant];
+        CGFloat to = [self toFrom:f velocity:v constant:constant sensitivity:sensitivity];
         NSNumber *toValue = [NSNumber numberWithFloat:to];
 
         [toComponents addObject:toValue];
@@ -66,38 +64,48 @@
     return to;
 }
 
-+ (id)timingFunctionWithConstant:(CGFloat)constant {
++ (id)toValueFromValue:(id)from forVelocity:(id)velocity withConstant:(CGFloat)constant {
+    return [self toValueFromValue:from forVelocity:velocity withConstant:constant sensitivity:kXNDecayTimingFunctionDefaultSensitivity];
+}
+
++ (id)timingFunctionWithConstant:(CGFloat)constant sensitivity:(CGFloat)sensitivity {
     XNDecayTimingFunction *timingFunction = [self timingFunction];
     [timingFunction setConstant:constant];
+    [timingFunction setSensitivity:sensitivity];
     return timingFunction;
+}
+
++ (id)timingFunctionWithConstant:(CGFloat)constant {
+    return [self timingFunctionWithConstant:constant sensitivity:kXNDecayTimingFunctionDefaultSensitivity];
+}
+
+- (id)copyWithZone:(NSZone *)zone {
+    id copy = [super copyWithZone:zone];
+    [copy setSensitivity:[self sensitivity]];
+    [copy setConstant:[self constant]];
+    return copy;
 }
 
 - (id)init {
     if ((self = [super init])) {
-        _constant = 0.998;
+        _sensitivity = kXNDecayTimingFunctionDefaultSensitivity;
+        _constant = kXNDecayTimingFunctionDefaultConstant;
     }
 
     return self;
 }
 
-- (CGFloat)simulateWithTimeInterval:(NSTimeInterval)dt velocity:(CGFloat)velocity from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
-    [super simulateWithTimeInterval:dt velocity:velocity from:from to:to complete:outComplete];
-
-    if (to - from == 0) {
-        *outComplete = YES;
-        return to;
-    }
+- (CGFloat)simulateWithTimeInterval:(NSTimeInterval)dt elapsed:(NSTimeInterval)elapsed velocity:(CGFloat)velocity from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
+    [super simulateWithTimeInterval:dt elapsed:elapsed velocity:velocity from:from to:to complete:outComplete];
 
     CGFloat c = _constant;
-    CGFloat t = [self elapsed];
-    CGFloat v0 = velocity;
+    CGFloat s = _sensitivity / kXNDecayTimingFunctionTemporalSensitivity;
+    CGFloat v0 = velocity / kXNDecayTimingFunctionTemporalSensitivity;
+    CGFloat t = elapsed * kXNDecayTimingFunctionTemporalSensitivity;
+    CGFloat v = powf(c, t) * v0;
+    CGFloat x = from + c * v0 * (1 - powf(c, t)) / (1 - c);
 
-    CGFloat v = v0 * powf(M_E, -c * t);
-    CGFloat x = from + v0 * (1 - powf(M_E, -c * t)) / c;
-
-    //NSLog(@"x = %f, v = %f; initial %f; v / v0 = %f", x - from, v, v0, v / v0);
-
-    if (fabs(x - to) <= 0.05) {
+    if (fabs(v) <= s) {
         *outComplete = YES;
         return to;
     } else {

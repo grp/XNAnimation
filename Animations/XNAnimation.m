@@ -24,12 +24,13 @@ const NSTimeInterval kXNAnimationDefaultDuration = 1.0;
     id _velocity;
     XNTimingFunction *_timingFunction;
     BOOL _removedOnCompletion;
+    id<XNAnimationDelegate> _delegate;
+    BOOL _delegateWantsProgress;
 
     // State-dependent properties.
     id _target;
     BOOL _completed;
-    id<XNAnimationDelegate> _delegate;
-    BOOL _delegateWantsProgress;
+    NSTimeInterval _elapsed;
 
     NSArray *_durations;
     NSArray *_velocities;
@@ -169,7 +170,9 @@ const NSTimeInterval kXNAnimationDefaultDuration = 1.0;
 }
 
 - (void)simulateWithTimeInterval:(NSTimeInterval)dt {
-    NSArray *positions = [_timingFunction simulateWithTimeInterval:dt durations:_durations velocities:_velocities fromComponents:_fromComponents toComponents:_toComponents complete:&_completed];
+    _elapsed += dt;
+
+    NSArray *positions = [_timingFunction simulateWithTimeInterval:dt elapsed:_elapsed durations:_durations velocities:_velocities fromComponents:_fromComponents toComponents:_toComponents complete:&_completed];
 
     id value = [_extractor objectFromComponents:positions templateObject:_toValue];
     [_extractor object:_target setValue:value forKeyPath:_keyPath];
@@ -192,6 +195,7 @@ const NSTimeInterval kXNAnimationDefaultDuration = 1.0;
 }
 
 - (void)reset {
+    _elapsed = 0;
     _target = nil;
 
     [_fromComponents release];

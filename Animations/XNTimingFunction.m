@@ -8,18 +8,19 @@
 
 #import "XNTimingFunction.h"
 
-@implementation XNTimingFunction {
-    NSTimeInterval _elapsed;
-}
-
-@synthesize elapsed = _elapsed;
+@implementation XNTimingFunction
 
 + (id)timingFunction {
     return [[[self alloc] init] autorelease];
 }
 
-- (CGFloat)simulateWithTimeInterval:(NSTimeInterval)dt duration:(CGFloat)duration from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
-    if (_elapsed >= duration) {
+- (id)copyWithZone:(NSZone *)zone {
+    id copy = [[[self class] alloc] init];
+    return copy;
+}
+
+- (CGFloat)simulateWithTimeInterval:(NSTimeInterval)dt elapsed:(NSTimeInterval)elapsed duration:(CGFloat)duration from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
+    if (elapsed >= duration) {
         *outComplete = YES;
         return to;
     } else {
@@ -28,16 +29,12 @@
     }
 }
 
-- (CGFloat)simulateWithTimeInterval:(NSTimeInterval)dt velocity:(CGFloat)velocity from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
+- (CGFloat)simulateWithTimeInterval:(NSTimeInterval)dt elapsed:(NSTimeInterval)elapsed velocity:(CGFloat)velocity from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
     *outComplete = YES;
     return to;
 }
 
-- (void)reset {
-    _elapsed = 0;
-}
-
-- (NSArray *)simulateWithTimeInterval:(NSTimeInterval)dt durations:(NSArray *)durations velocities:(NSArray *)velocities fromComponents:(NSArray *)fromComponents toComponents:(NSArray *)toComponents complete:(BOOL *)outComplete {
+- (NSArray *)simulateWithTimeInterval:(NSTimeInterval)dt elapsed:(NSTimeInterval)elapsed durations:(NSArray *)durations velocities:(NSArray *)velocities fromComponents:(NSArray *)fromComponents toComponents:(NSArray *)toComponents complete:(BOOL *)outComplete {
     if ((fromComponents == nil || fromComponents == nil) || (velocities == nil && durations == nil)) {
         [NSException raise:@"XNTimingFunctionMissingComponentsException" format:@"from, to, and duration/velocity must be provided"];
     }
@@ -53,8 +50,6 @@
         *outComplete = YES;
     }
 
-    _elapsed += dt;
-
     for (NSUInteger i = 0; i < [fromComponents count]; i++) {
         NSNumber *fromValue = [fromComponents objectAtIndex:i];
         NSNumber *toValue = [toComponents objectAtIndex:i];
@@ -69,10 +64,10 @@
 
         if (velocityValue != nil) {
             CGFloat velocity = [velocityValue floatValue];
-            position = [self simulateWithTimeInterval:dt velocity:velocity from:from to:to complete:&complete];
+            position = [self simulateWithTimeInterval:dt elapsed:elapsed velocity:velocity from:from to:to complete:&complete];
         } else if (durationValue != nil) {
             CGFloat duration = [durationValue floatValue];
-            position = [self simulateWithTimeInterval:dt duration:duration from:from to:to complete:&complete];
+            position = [self simulateWithTimeInterval:dt elapsed:elapsed duration:duration from:from to:to complete:&complete];
         }
 
         if (outComplete != NULL) {
