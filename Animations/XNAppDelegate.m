@@ -11,6 +11,8 @@
 #import "XNAppDelegate.h"
 #import "XNKeyValueExtractor.h"
 
+#import "XNScrollView.h"
+
 #import "NSObject+XNAnimation.h"
 
 @interface CASpringAnimation : CABasicAnimation
@@ -108,6 +110,16 @@ UISlider *_m, *_b, *_k;
     [_k setValue:273.0f];
     [_k setHidden:NO];
     [self.window addSubview:_k];
+
+    XNScrollView *sv = [[XNScrollView alloc] initWithFrame:self.window.bounds];
+    [sv setContentSize:CGSizeMake(self.window.bounds.size.width * 2, self.window.bounds.size.height)];
+    [self.window addSubview:sv];
+    [sv addSubview:sb];
+    [sv addSubview:_k];
+    [sv addSubview:sdl];
+    [sv addSubview:_m];
+    [sv addSubview:_b];
+    [sv addSubview:s];
 
     /*id a = [[XNKeyValueExtractor alloc] init];
     NSLog(@"native: %@", [sb.layer valueForKeyPath:@"transform.translation"]);

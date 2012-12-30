@@ -24,6 +24,7 @@
 		7D2E78C41660C6060006FAE5 /* XNSpringTimingFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D2E78C31660C6060006FAE5 /* XNSpringTimingFunction.m */; };
 		7D2E78C71660C6120006FAE5 /* XNLinearTimingFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D2E78C61660C6120006FAE5 /* XNLinearTimingFunction.m */; };
 		7D2E78CD1662E1AA0006FAE5 /* XNBezierTimingFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D2E78CC1662E1AA0006FAE5 /* XNBezierTimingFunction.m */; };
+		7D7522F91690B6F30037FA16 /* XNScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D7522F81690B6F30037FA16 /* XNScrollView.m */; };
 		7DA5EF87166AF1B900E6F360 /* NSObject+XNAnimation.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DA5EF86166AF1B900E6F360 /* NSObject+XNAnimation.m */; };
 		7DA5EF89166AF80600E6F360 /* XNAnimationLink.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DA5EF88166AF80600E6F360 /* XNAnimationLink.m */; };
 		7DA5EF8B166C31D200E6F360 /* NSObject+XNKeyValueExtractor.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DA5EF8A166C31D200E6F360 /* NSObject+XNKeyValueExtractor.m */; };
@@ -59,6 +60,8 @@
 		7D2E78C61660C6120006FAE5 /* XNLinearTimingFunction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XNLinearTimingFunction.m; sourceTree = "<group>"; };
 		7D2E78CB1662E1AA0006FAE5 /* XNBezierTimingFunction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XNBezierTimingFunction.h; sourceTree = "<group>"; };
 		7D2E78CC1662E1AA0006FAE5 /* XNBezierTimingFunction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XNBezierTimingFunction.m; sourceTree = "<group>"; };
+		7D7522F71690B6F30037FA16 /* XNScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XNScrollView.h; sourceTree = "<group>"; };
+		7D7522F81690B6F30037FA16 /* XNScrollView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XNScrollView.m; sourceTree = "<group>"; };
 		7DA5EF84166AF19D00E6F360 /* NSObject+XNAnimation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+XNAnimation.h"; sourceTree = "<group>"; };
 		7DA5EF86166AF1B900E6F360 /* NSObject+XNAnimation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+XNAnimation.m"; sourceTree = "<group>"; };
 		7DA5EF88166AF80600E6F360 /* XNAnimationLink.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XNAnimationLink.m; sourceTree = "<group>"; };
@@ -132,6 +135,8 @@
 				7DA5EF8A166C31D200E6F360 /* NSObject+XNKeyValueExtractor.m */,
 				7DA5EF84166AF19D00E6F360 /* NSObject+XNAnimation.h */,
 				7DA5EF86166AF1B900E6F360 /* NSObject+XNAnimation.m */,
+				7D7522F71690B6F30037FA16 /* XNScrollView.h */,
+				7D7522F81690B6F30037FA16 /* XNScrollView.m */,
 				7D2E78A916602D890006FAE5 /* XNAppDelegate.h */,
 				7D2E78AA16602D890006FAE5 /* XNAppDelegate.m */,
 				7D2E78A116602D890006FAE5 /* Supporting Files */,
@@ -231,6 +236,7 @@
 				7DA5EF87166AF1B900E6F360 /* NSObject+XNAnimation.m in Sources */,
 				7DA5EF89166AF80600E6F360 /* XNAnimationLink.m in Sources */,
 				7DA5EF8B166C31D200E6F360 /* NSObject+XNKeyValueExtractor.m in Sources */,
+				7D7522F91690B6F30037FA16 /* XNScrollView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

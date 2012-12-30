@@ -195,6 +195,12 @@ static CGFloat XNDecayTimingFunctionBouncingDistanceAtTime(CGFloat c, CGFloat b,
         // -((1 - c) * (to - from) / (c * v0) - 1) = powf(c, t)
         // t = logf(-((1 - c) * fabs(to - from) / (c * fabs(v0)) - 1)) / logf(c)
         tSwitch = logf(-((1 - c) * fabs(to - from) / (c * fabs(v0)) - 1)) / logf(c);
+
+        if (isnan(tSwitch)) {
+            // Is this the right thing to do here?
+            tSwitch = CGFLOAT_MAX;
+        }
+        
         xSwitch = XNDecayTimingFunctionSimpleDistanceAtTime(c, tSwitch, v0, from);
     }
 
@@ -205,10 +211,14 @@ static CGFloat XNDecayTimingFunctionBouncingDistanceAtTime(CGFloat c, CGFloat b,
         v = XNDecayTimingFunctionSimpleVelocityAtTime(c, t, v0);
         x = XNDecayTimingFunctionSimpleDistanceAtTime(c, t, v0, from);
     } else {
-        t = t - tSwitch;
-        v = XNDecayTimingFunctionBouncingVelocityAtTime(c, b, t, v0);
-        x = XNDecayTimingFunctionBouncingDistanceAtTime(c, b, t, v0, xSwitch, to);
+        CGFloat vSwitch = XNDecayTimingFunctionSimpleVelocityAtTime(c, tSwitch, v0);
+        CGFloat tAfterSwitch = t - tSwitch;
+        
+        v = XNDecayTimingFunctionBouncingVelocityAtTime(c, b, tAfterSwitch, vSwitch);
+        x = XNDecayTimingFunctionBouncingDistanceAtTime(c, b, tAfterSwitch, vSwitch, xSwitch, to);
     }
+
+    assert(!isnan(x));
 
     if (fabs(v) <= s && fabs(x - to) <= _sensitivity) {
         *outComplete = YES;
