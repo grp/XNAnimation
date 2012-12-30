@@ -84,8 +84,8 @@
 // Not sure how this works, but it does. Found online somewhere.
 #define nCr(n, r) round(exp((lgamma(n+1)) - (lgamma(r+1) + lgamma(n-r+1))))
 
-- (CGFloat)simulateWithTimeInterval:(NSTimeInterval)dt elapsed:(NSTimeInterval)elapsed duration:(CGFloat)duration from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
-    [super simulateWithTimeInterval:dt elapsed:elapsed duration:duration from:from to:to complete:outComplete];
+- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed duration:(CGFloat)duration from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
+    [super simulateIndex:i elapsed:elapsed duration:duration from:from to:to complete:outComplete];
 
     CGPoint result = CGPointZero;
 

@@ -138,6 +138,7 @@ UISlider *_m, *_b, *_k;
     [_m setHidden:(i != 0)];
 
     [sb.layer setPosition:p];
+    [sb removeAllXNAnimations];
 
     o = i;
 }
@@ -175,10 +176,11 @@ UISlider *_m, *_b, *_k;
         [brick removeAllXNAnimations];
 
         CGPoint f = [brick.layer position];
-        f = [pan translationInView:self.window];
-        [brick.layer setPosition:CGPointMake(f.x + p.x, f.y + p.y)];
+        f = [pan locationInView:self.window];
+        [brick.layer setPosition:f];
 
-        CGPoint tr = [pan translationInView:self.window];
+        CGPoint tr = [pan locationInView:self.window];
+        tr.x -= p.x; tr.y -= p.y;
         CGFloat p = (fabs(tr.x / (self.window.bounds.size.width / 4)) + fabs(tr.y / (self.window.bounds.size.height / 3))) / 2;
         UIColor *c = [UIColor colorWithRed:0 green:p blue:(1-p) alpha:1];
         [brick setBackgroundColor:c];
@@ -200,7 +202,22 @@ UISlider *_m, *_b, *_k;
             if ([s selectedSegmentIndex] != 1) {
                 [a setToValue:[NSValue valueWithCGPoint:p]];
             } else {
-                id to = [XNDecayTimingFunction toValueFromValue:[brick valueForKeyPath:@"center"] forVelocity:[NSValue valueWithCGPoint:v] withConstant:[sdl value]];
+                id c = [brick valueForKeyPath:@"center"];
+                id to = [XNDecayTimingFunction toValueFromValue:c forVelocity:[NSValue valueWithCGPoint:v] withConstant:[sdl value]];
+
+                CGFloat distance = 300.0;
+                id min = [NSValue valueWithCGPoint:CGPointMake(distance, distance)];
+                id max = [NSValue valueWithCGPoint:CGPointMake(self.window.bounds.size.width - distance, self.window.bounds.size.height - distance)];
+                id inside = [XNDecayTimingFunction insideValueForValue:c fromValue:min toValue:max];
+                [(XNDecayTimingFunction *)tf setInsideValue:inside];
+
+                CGPoint t = [to CGPointValue];
+                if (t.x < [min CGPointValue].x) t.x = [min CGPointValue].x;
+                if (t.y < [min CGPointValue].y) t.y = [min CGPointValue].y;
+                if (t.x > [max CGPointValue].x) t.x = [max CGPointValue].x;
+                if (t.y > [max CGPointValue].y) t.y = [max CGPointValue].y;
+                to = [NSValue valueWithCGPoint:t];
+                
                 [a setToValue:to];
             }
             
@@ -221,7 +238,7 @@ UISlider *_m, *_b, *_k;
 
             [a setToValue:[UIColor blueColor]];
             
-            [brick addXNAnimation:a];
+            //[brick addXNAnimation:a];
         }
     }
 }

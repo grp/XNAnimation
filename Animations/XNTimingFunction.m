@@ -19,7 +19,7 @@
     return copy;
 }
 
-- (CGFloat)simulateWithTimeInterval:(NSTimeInterval)dt elapsed:(NSTimeInterval)elapsed duration:(CGFloat)duration from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
+- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed duration:(CGFloat)duration from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
     if (elapsed >= duration) {
         *outComplete = YES;
         return to;
@@ -29,7 +29,7 @@
     }
 }
 
-- (CGFloat)simulateWithTimeInterval:(NSTimeInterval)dt elapsed:(NSTimeInterval)elapsed velocity:(CGFloat)velocity from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
+- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed velocity:(CGFloat)velocity from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
     *outComplete = YES;
     return to;
 }
@@ -64,10 +64,10 @@
 
         if (velocityValue != nil) {
             CGFloat velocity = [velocityValue floatValue];
-            position = [self simulateWithTimeInterval:dt elapsed:elapsed velocity:velocity from:from to:to complete:&complete];
+            position = [self simulateIndex:i elapsed:elapsed velocity:velocity from:from to:to complete:&complete];
         } else if (durationValue != nil) {
             CGFloat duration = [durationValue floatValue];
-            position = [self simulateWithTimeInterval:dt elapsed:elapsed duration:duration from:from to:to complete:&complete];
+            position = [self simulateIndex:i elapsed:elapsed duration:duration from:from to:to complete:&complete];
         }
 
         if (outComplete != NULL) {

@@ -48,8 +48,8 @@ const static CGFloat kXNSpringTimingFunctionDefaultMass = 1.0f;
     return self;
 }
 
-- (CGFloat)simulateWithTimeInterval:(NSTimeInterval)dt elapsed:(NSTimeInterval)elapsed velocity:(CGFloat)velocity from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
-    [super simulateWithTimeInterval:dt elapsed:elapsed velocity:velocity from:from to:to complete:outComplete];
+- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed velocity:(CGFloat)velocity from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
+    [super simulateIndex:i elapsed:elapsed velocity:velocity from:from to:to complete:outComplete];
 
     CGFloat t = elapsed;
 
