@@ -198,12 +198,10 @@ static CGFloat XNDecayTimingFunctionBouncingDistanceAtTime(CGFloat c, CGFloat b,
         xSwitch = XNDecayTimingFunctionSimpleDistanceAtTime(c, tSwitch, v0, from);
     }
 
-    BOOL switched = t > tSwitch;
-
     CGFloat v = 0;
     CGFloat x = 0;
 
-    if (!switched) {
+    if (t < tSwitch) {
         v = XNDecayTimingFunctionSimpleVelocityAtTime(c, t, v0);
         x = XNDecayTimingFunctionSimpleDistanceAtTime(c, t, v0, from);
     } else {
