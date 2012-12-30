@@ -643,6 +643,8 @@
         return [NSArray arrayWithObject:object];
     } else if ([object isKindOfClass:[NSValue class]]) {
         return [self componentsForValue:object];
+    } else if ([object isKindOfClass:[NSArray class]]) {
+        return object;
     } else {
         return nil;
     }
@@ -660,6 +662,8 @@
         return [components lastObject];
     } else if ([object isKindOfClass:[NSValue class]]) {
         return [self valueFromComponents:components templateValue:object];
+    } else if ([object isKindOfClass:[NSArray class]]) {
+        return components;
     } else {
         return nil;
     }
