@@ -169,10 +169,12 @@ static CGFloat XNDecayTimingFunctionBouncingDistanceAtTime(CGFloat c, CGFloat b,
         tSwitch = 0;
         xSwitch = from;
     } else {
-        //from + c * v0 * (1 - powf(c, t)) / (1 - c) = to
-        //(to - from) / (c * v0) = (1 - powf(c, t)) / (1 - c)
-        //(1 - c) * (to - from) / (c * v0) = 1 - powf(c, t)
-        //-((1 - c) * (to - from) / (c * v0) - 1) = powf(c, t)
+        // Solve for time when distance equals abs(to - from).
+        // from + c * v0 * (1 - powf(c, t)) / (1 - c) = to
+        // (to - from) / (c * v0) = (1 - powf(c, t)) / (1 - c)
+        // (1 - c) * (to - from) / (c * v0) = 1 - powf(c, t)
+        // -((1 - c) * (to - from) / (c * v0) - 1) = powf(c, t)
+        // t = logf(-((1 - c) * fabs(to - from) / (c * fabs(v0)) - 1)) / logf(c)
         tSwitch = logf(-((1 - c) * fabs(to - from) / (c * fabs(v0)) - 1)) / logf(c);
         xSwitch = XNDecayTimingFunctionSimpleDistanceAtTime(c, tSwitch, v0, from);
     }

@@ -205,9 +205,9 @@ UISlider *_m, *_b, *_k;
                 id c = [brick valueForKeyPath:@"center"];
                 id to = [XNDecayTimingFunction toValueFromValue:c forVelocity:[NSValue valueWithCGPoint:v] withConstant:[sdl value]];
 
-                CGFloat distance = 300.0;
-                id min = [NSValue valueWithCGPoint:CGPointMake(distance, distance)];
-                id max = [NSValue valueWithCGPoint:CGPointMake(self.window.bounds.size.width - distance, self.window.bounds.size.height - distance)];
+                CGPoint distance = CGPointMake(self.window.bounds.size.width / 3.0f, self.window.bounds.size.height / 3.0f);
+                id min = [NSValue valueWithCGPoint:CGPointMake(distance.x, distance.y)];
+                id max = [NSValue valueWithCGPoint:CGPointMake(self.window.bounds.size.width - distance.x, self.window.bounds.size.height - distance.y)];
                 id inside = [XNDecayTimingFunction insideValueForValue:c fromValue:min toValue:max];
                 [(XNDecayTimingFunction *)tf setInsideValue:inside];
 
@@ -238,7 +238,7 @@ UISlider *_m, *_b, *_k;
 
             [a setToValue:[UIColor blueColor]];
             
-            //[brick addXNAnimation:a];
+            [brick addXNAnimation:a];
         }
     }
 }
