@@ -29,6 +29,25 @@ const static CGFloat kXNDecayTimingFunctionDefaultSensitivity = 0.05f;
 @synthesize constant = _constant;
 @synthesize bounce = _bounce;
 
+// The basic scroll view algorithm, each frame:
+//
+// v = v * c                 -- constant friciton
+// x = x + v                 -- v = dx/dt
+// if outside:
+//   x = x - d * (1 - b)     -- the magic: move back
+//   v = v * b               -- slow down faster
+//
+// d: distance outside scroll view
+// c: scrolling constant; 0.998
+// b: bounce constant; 0.99
+//
+// Apple implements this strangely. Rather than taking an integral of the above,
+// they use a summation over every millisecond. To reproduce the same behavior
+// and to allow for use of identical scrolling and bounce coefficients, the same
+// strange features are emulated here, with the millisecond conversion factor
+// stored in kXNDecayTimingFunctionTemporalSensitivity and the simplification of
+// the summation present in the following functions.
+
 static CGFloat XNDecayTimingFunctionSimpleVelocityAtTime(CGFloat c, CGFloat t, CGFloat v0) {
     return powf(c, t) * v0;
 }
