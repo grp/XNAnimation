@@ -8,12 +8,14 @@
 
 #import "XNScrollView.h"
 
-const static CGFloat kXNScrollViewElasticConstant = 0.5f;
+// iOS 6 introduces a new formula for this, depending on the dimensions of the
+// scroll view as well as a constant. This option can either emulate that new
+// behavior or the previous simple scaling by the defined elastic constant.
+const static BOOL kXNScrollViewElasticSimpleFormula = NO;
+const static CGFloat kXNScrollViewElasticConstant = 0.55f;
 
 const CGFloat XNScrollViewDecelerationRateNormal = 0.998f;
 const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
-
-const static CGFloat kXNScrollViewBounceConstant = 0.99f;
 
 @interface XNScrollView () <XNAnimationDelegate>
 @end
@@ -320,21 +322,55 @@ const static CGFloat kXNScrollViewBounceConstant = 0.99f;
     return scrollBounds;
 }
 
+- (CGFloat)_elasticDistanceForDistance:(CGFloat)distance constant:(CGFloat)constant range:(CGFloat)range {
+    if (kXNScrollViewElasticSimpleFormula) {
+        distance = distance * constant;
+    } else {
+        distance = (1.0 - (1.0 / ((distance * constant / range) + 1.0))) * range;
+    }
+    
+    return distance;
+}
+
 - (CGPoint)_constrainContentOffset:(CGPoint)offset toScrollBounds:(CGRect)scrollBounds elastic:(BOOL)elastic {
     CGFloat elasticConstant = (elastic ? kXNScrollViewElasticConstant : 0.0f);
     CGFloat horizontalConstant = ([self _effectiveBouncesHorizontally] ? elasticConstant : 0.0f);
     CGFloat verticalConstant = ([self _effectiveBouncesVertically] ? elasticConstant : 0.0f);
 
     if (offset.x < CGRectGetMinX(scrollBounds)) {
-        offset.x = CGRectGetMinX(scrollBounds) - fabs(offset.x - CGRectGetMinX(scrollBounds)) * horizontalConstant;
+        CGFloat range = [self bounds].size.width;
+        CGFloat edge = CGRectGetMinX(scrollBounds);
+        
+        CGFloat distance = fabs(offset.x - edge);
+        distance = [self _elasticDistanceForDistance:distance constant:horizontalConstant range:range];
+        
+        offset.x = edge - distance;
     } else if (offset.x > CGRectGetMaxX(scrollBounds)) {
-        offset.x = CGRectGetMaxX(scrollBounds) + fabs(offset.x - CGRectGetMaxX(scrollBounds)) * horizontalConstant;
+        CGFloat range = [self bounds].size.width;
+        CGFloat edge = CGRectGetMaxX(scrollBounds);
+
+        CGFloat distance = fabs(offset.x - edge);
+        distance = [self _elasticDistanceForDistance:distance constant:horizontalConstant range:range];
+
+        offset.x = edge + distance;
     }
 
     if (offset.y < CGRectGetMinY(scrollBounds)) {
-        offset.y = CGRectGetMinY(scrollBounds) - fabs(offset.y - CGRectGetMinX(scrollBounds)) * verticalConstant;
+        CGFloat range = [self bounds].size.height;
+        CGFloat edge = CGRectGetMinY(scrollBounds);
+
+        CGFloat distance = fabs(offset.y - edge);
+        distance = [self _elasticDistanceForDistance:distance constant:verticalConstant range:range];
+
+        offset.y = edge - distance;
     } else if (offset.y > CGRectGetMaxY(scrollBounds)) {
-        offset.y = CGRectGetMaxY(scrollBounds) + fabs(offset.y - CGRectGetMaxY(scrollBounds)) * verticalConstant;
+        CGFloat range = [self bounds].size.height;
+        CGFloat edge = CGRectGetMaxY(scrollBounds);
+
+        CGFloat distance = fabs(offset.y - edge);
+        distance = [self _elasticDistanceForDistance:distance constant:verticalConstant range:range];
+
+        offset.y = edge + distance;
     }
 
     return offset;

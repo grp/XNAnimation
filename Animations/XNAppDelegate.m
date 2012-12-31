@@ -112,14 +112,14 @@ UISlider *_m, *_b, *_k;
     [self.window addSubview:_k];
 
     XNScrollView *sv = [[XNScrollView alloc] initWithFrame:self.window.bounds];
-    [sv setContentSize:CGSizeMake(self.window.bounds.size.width * 2, self.window.bounds.size.height)];
+    [sv setContentSize:CGSizeMake(self.window.bounds.size.width * 1.5, self.window.bounds.size.height)];
     [self.window addSubview:sv];
-    [sv addSubview:sb];
     [sv addSubview:_k];
     [sv addSubview:sdl];
     [sv addSubview:_m];
     [sv addSubview:_b];
     [sv addSubview:s];
+    [self.window sendSubviewToBack:sv];
 
     /*id a = [[XNKeyValueExtractor alloc] init];
     NSLog(@"native: %@", [sb.layer valueForKeyPath:@"transform.translation"]);
