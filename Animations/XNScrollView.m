@@ -292,20 +292,23 @@ const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
 - (BOOL)_effectiveBouncesHorizontally {
     CGRect bounds = [self bounds];
     CGSize contentSize = [self contentSize];
+    UIEdgeInsets contentInset = [self contentInset];
 
-    return [self bounces] && ([self alwaysBounceHorizontal] || (contentSize.width > bounds.size.width));
+    return [self bounces] && ([self alwaysBounceHorizontal] || (contentInset.left + contentSize.width + contentInset.right > bounds.size.width));
 }
 
 - (BOOL)_effectiveBouncesVertically {
     CGRect bounds = [self bounds];
     CGSize contentSize = [self contentSize];
+    UIEdgeInsets contentInset = [self contentInset];
 
-    return [self bounces] && ([self alwaysBounceVertical] || (contentSize.height > bounds.size.height));
+    return [self bounces] && ([self alwaysBounceVertical] || (contentInset.top + contentSize.height + contentInset.bottom > bounds.size.height));
 }
 
 - (CGRect)_effectiveScrollBounds {
     CGRect bounds = [self bounds];
     CGSize contentSize = [self contentSize];
+    UIEdgeInsets contentInset = [self contentInset];
 
     if (contentSize.width < bounds.size.width) {
         contentSize.width = bounds.size.width;
@@ -319,7 +322,8 @@ const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
     scrollBounds.size.width = contentSize.width - bounds.size.width;
     scrollBounds.size.height = contentSize.height - bounds.size.height;
 
-    scrollBounds = UIEdgeInsetsInsetRect(scrollBounds, [self contentInset]);
+    UIEdgeInsets invertedInsets = UIEdgeInsetsMake(-contentInset.top, -contentInset.left, -contentInset.bottom, -contentInset.right);
+    scrollBounds = UIEdgeInsetsInsetRect(scrollBounds, invertedInsets);
 
     return scrollBounds;
 }
