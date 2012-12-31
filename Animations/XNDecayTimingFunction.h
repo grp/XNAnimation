@@ -21,7 +21,7 @@
 + (id)toValueFromValue:(id)from forVelocity:(id)velocity withConstant:(CGFloat)constant sensitivity:(CGFloat)sensitivity;
 
 // The return value of this method is only valid for assigning to insideValue.
-+ (id)insideValueForValue:(id)value fromValue:(id)fromValue toValue:(id)toValue;
++ (id)insideValueFromValue:(id)fromValue toValue:(id)toValue minimumValue:(id)minimumValue maximumValue:(id)maximumValue;
 
 + (id)timingFunctionWithConstant:(CGFloat)constant;
 + (id)timingFunctionWithConstant:(CGFloat)constant bounce:(CGFloat)bounce;

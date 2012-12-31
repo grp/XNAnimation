@@ -14,6 +14,8 @@
 const static BOOL kXNScrollViewElasticSimpleFormula = NO;
 const static CGFloat kXNScrollViewElasticConstant = 0.55f;
 
+const static CGFloat kXNScrollViewDecelerationMinimumVelocity = 25.0f;
+
 const CGFloat XNScrollViewDecelerationRateNormal = 0.998f;
 const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
 
@@ -390,6 +392,10 @@ const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
 
 - (void)animationUpdated:(XNAnimation *)animation {
     if (animation == _scrollAnimation) {
+        // This is a bit of a hack, but it's easier than adding bounceless
+        // support to the animation itself. Instead, just cap the values from
+        // the animation to what they should be for when bouncing is disabled.
+
         BOOL effectiveHorizontal = [self _effectiveBouncesHorizontally];
         BOOL effectiveVertical = [self _effectiveBouncesVertically];
 
@@ -429,61 +435,65 @@ const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
         _scrolling = YES;
 
         _panStartContentOffset = [self contentOffset];
-        
-        return;
     } else if (state == UIGestureRecognizerStateCancelled) {
         _dragging = NO;
         _scrolling = NO;
         [self _delegateDidEndDraggingWillDecelerate:NO];
         [self _delegateDidEndScrolling];
-        
-        return;
-    }
+    } else {
+        CGRect scrollBounds = [self _effectiveScrollBounds];
 
-    CGRect scrollBounds = [self _effectiveScrollBounds];
+        CGPoint velocity = [_panGestureRecognizer velocityInView:self];
+        velocity.x = -velocity.x;
+        velocity.y = -velocity.y;
 
-    CGPoint velocity = [_panGestureRecognizer velocityInView:self];
-    velocity.x = -velocity.x;
-    velocity.y = -velocity.y;
+        CGPoint translation = [_panGestureRecognizer translationInView:self];
+        translation.x = _panStartContentOffset.x - translation.x;
+        translation.y = _panStartContentOffset.y - translation.y;
 
-    CGPoint translation = [_panGestureRecognizer translationInView:self];
-    translation.x = _panStartContentOffset.x - translation.x;
-    translation.y = _panStartContentOffset.y - translation.y;
+        translation = [self _constrainContentOffset:translation toScrollBounds:scrollBounds elastic:YES];
 
-    translation = [self _constrainContentOffset:translation toScrollBounds:scrollBounds elastic:YES];
+        if (state == UIGestureRecognizerStateChanged) {
+            [self setContentOffset:translation];
+        } else if (state == UIGestureRecognizerStateEnded) {
+            CGFloat scalarVelocity = sqrtf(velocity.x * velocity.x + velocity.y * velocity.y);
 
-    if (state == UIGestureRecognizerStateChanged) {
-        [self setContentOffset:translation];
-    } else if (state == UIGestureRecognizerStateEnded) {
-        NSValue *fromValue = [NSValue valueWithCGPoint:translation];
-        NSValue *velocityValue = [NSValue valueWithCGPoint:velocity];
-        NSValue *toValue = [XNDecayTimingFunction toValueFromValue:fromValue forVelocity:velocityValue withConstant:[self decelerationRate]];
-        
-        CGPoint boundedTranslation = [toValue CGPointValue];
-        boundedTranslation = [self _constrainContentOffset:boundedTranslation toScrollBounds:scrollBounds elastic:NO];
-        NSValue *boundedToValue = [NSValue valueWithCGPoint:boundedTranslation];
+            if (scalarVelocity > kXNScrollViewDecelerationMinimumVelocity) {
+                NSValue *fromValue = [NSValue valueWithCGPoint:translation];
+                NSValue *velocityValue = [NSValue valueWithCGPoint:velocity];
+                NSValue *toValue = [XNDecayTimingFunction toValueFromValue:fromValue forVelocity:velocityValue withConstant:[self decelerationRate]];
+                
+                CGPoint boundedTranslation = [toValue CGPointValue];
+                boundedTranslation = [self _constrainContentOffset:boundedTranslation toScrollBounds:scrollBounds elastic:NO];
+                NSValue *boundedToValue = [NSValue valueWithCGPoint:boundedTranslation];
 
-        CGPoint minimum = CGPointMake(CGRectGetMinX(scrollBounds), CGRectGetMinY(scrollBounds));
-        NSValue *minimumValue = [NSValue valueWithCGPoint:minimum];
-        CGPoint maximum = CGPointMake(CGRectGetMaxX(scrollBounds), CGRectGetMaxY(scrollBounds));
-        NSValue *maximumValue = [NSValue valueWithCGPoint:maximum];
-        id insideValue = [XNDecayTimingFunction insideValueForValue:fromValue fromValue:minimumValue toValue:maximumValue];
+                CGPoint minimum = CGPointMake(CGRectGetMinX(scrollBounds), CGRectGetMinY(scrollBounds));
+                NSValue *minimumValue = [NSValue valueWithCGPoint:minimum];
+                CGPoint maximum = CGPointMake(CGRectGetMaxX(scrollBounds), CGRectGetMaxY(scrollBounds));
+                NSValue *maximumValue = [NSValue valueWithCGPoint:maximum];
+                id insideValue = [XNDecayTimingFunction insideValueFromValue:fromValue toValue:boundedToValue minimumValue:minimumValue maximumValue:maximumValue];
 
-        XNDecayTimingFunction *timingFunction = (XNDecayTimingFunction *) [_scrollAnimation timingFunction];
-        [timingFunction setInsideValue:insideValue];
+                XNDecayTimingFunction *timingFunction = (XNDecayTimingFunction *) [_scrollAnimation timingFunction];
+                [timingFunction setInsideValue:insideValue];
 
-        [_scrollAnimation setToValue:boundedToValue];
-        [_scrollAnimation setFromValue:fromValue];
-        [_scrollAnimation setVelocity:velocityValue];
+                [_scrollAnimation setToValue:boundedToValue];
+                [_scrollAnimation setFromValue:fromValue];
+                [_scrollAnimation setVelocity:velocityValue];
 
-        _dragging = NO;
+                _dragging = NO;
 
-        [self _delegateDidEndDraggingWillDecelerate:YES];
-        [self _delegateWillBeginDecelerating];
-        [self addXNAnimation:_scrollAnimation];
+                [self _delegateDidEndDraggingWillDecelerate:YES];
+                [self _delegateWillBeginDecelerating];
+                [self addXNAnimation:_scrollAnimation];
 
-        _decelerating = YES;
-
+                _decelerating = YES;
+            } else {
+                _dragging = NO;
+                _scrolling = NO;
+                [self _delegateDidEndDraggingWillDecelerate:NO];
+                [self _delegateDidEndScrolling];
+            }
+        }
     }
 }
 

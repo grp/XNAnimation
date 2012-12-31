@@ -220,7 +220,7 @@ UISlider *_m, *_b, *_k;
                 CGPoint distance = CGPointMake(self.window.bounds.size.width / 3.0f, self.window.bounds.size.height / 3.0f);
                 id min = [NSValue valueWithCGPoint:CGPointMake(distance.x, distance.y)];
                 id max = [NSValue valueWithCGPoint:CGPointMake(self.window.bounds.size.width - distance.x, self.window.bounds.size.height - distance.y)];
-                id inside = [XNDecayTimingFunction insideValueForValue:c fromValue:min toValue:max];
+                id inside = [XNDecayTimingFunction insideValueFromValue:c toValue:to minimumValue:min maximumValue:max];
                 [(XNDecayTimingFunction *)tf setInsideValue:inside];
 
                 CGPoint t = [to CGPointValue];

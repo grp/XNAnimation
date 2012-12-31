@@ -110,21 +110,26 @@ static CGFloat XNDecayTimingFunctionBouncingDistanceAtTime(CGFloat c, CGFloat b,
     return [self toValueFromValue:from forVelocity:velocity withConstant:constant sensitivity:kXNDecayTimingFunctionDefaultSensitivity];
 }
 
-+ (id)insideValueForValue:(id)value fromValue:(id)fromValue toValue:(id)toValue {
++ (id)insideValueFromValue:(id)fromValue toValue:(id)toValue minimumValue:(id)minimumValue maximumValue:(id)maximumValue {
     XNKeyValueExtractor *kve = [[XNKeyValueExtractor alloc] init];
-    NSArray *components = [kve componentsForObject:value];
+    NSArray *minimumComponents = [kve componentsForObject:minimumValue];
+    NSArray *maximumComponents = [kve componentsForObject:maximumValue];
     NSArray *fromComponents = [kve componentsForObject:fromValue];
     NSArray *toComponents = [kve componentsForObject:toValue];
     [kve release];
 
     NSMutableArray *betweenComponents = [NSMutableArray array];
 
-    for (NSUInteger i = 0; i < [components count]; i++) {
-        CGFloat v = [[components objectAtIndex:i] floatValue];
-        CGFloat f = [[fromComponents objectAtIndex:i] floatValue];
-        CGFloat t = [[toComponents objectAtIndex:i] floatValue];
+    for (NSUInteger i = 0; i < [fromComponents count]; i++) {
+        CGFloat min = [[minimumComponents objectAtIndex:i] floatValue];
+        CGFloat max = [[maximumComponents objectAtIndex:i] floatValue];
+        CGFloat from = [[fromComponents objectAtIndex:i] floatValue];
+        CGFloat to = [[toComponents objectAtIndex:i] floatValue];
 
-        NSValue *betweenValue = [NSNumber numberWithBool:(v >= f && v <= t)];
+        BOOL leftOutside = (from <= min && to <= min);
+        BOOL rightOutside = (from >= max && to >= max);
+
+        NSValue *betweenValue = [NSNumber numberWithBool:(!rightOutside && !leftOutside)];
         [betweenComponents addObject:betweenValue];
     }
 
