@@ -30,7 +30,7 @@
 @property (nonatomic, assign, getter=isRemovedOnCompletion) BOOL removedOnCompletion; // default YES
 @property (nonatomic, assign) id<XNAnimationDelegate> delegate; // optional, default nil
 
-@property (nonatomic, readonly) BOOL completed; // private, not what you think!
+@property (nonatomic, assign, readonly) BOOL completed; // reset to NO when started
 
 @end
 
