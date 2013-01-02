@@ -36,6 +36,7 @@ UIView *sb = nil;
 CGPoint p;
 
 UISlider *sdl;
+XNScrollView *sv;
 
 
 UISlider *_m, *_b, *_k;
@@ -111,8 +112,9 @@ UISlider *_m, *_b, *_k;
     [_k setHidden:NO];
     [self.window addSubview:_k];
 
-    XNScrollView *sv = [[XNScrollView alloc] initWithFrame:self.window.bounds];
-    [sv setContentSize:CGSizeMake(self.window.bounds.size.width * 1.5, self.window.bounds.size.height)];
+    sv = [[XNScrollView alloc] initWithFrame:self.window.bounds];
+    [sv setContentSize:CGSizeMake(self.window.bounds.size.width * 5, self.window.bounds.size.height * 5)];
+    [sv setShowsHorizontalScrollIndicator:YES];
     [self.window addSubview:sv];
     [sv addSubview:_k];
     [sv addSubview:sdl];
@@ -151,6 +153,8 @@ UISlider *_m, *_b, *_k;
 
     [sb.layer setPosition:p];
     [sb removeAllXNAnimations];
+
+    [sv flashScrollIndicators];
 
     o = i;
 }

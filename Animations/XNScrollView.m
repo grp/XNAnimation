@@ -19,6 +19,73 @@ const static CGFloat kXNScrollViewDecelerationMinimumVelocity = 25.0f;
 const CGFloat XNScrollViewDecelerationRateNormal = 0.998f;
 const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
 
+const static CGFloat kXNScrollViewIndicatorMinimumDimension = 9.0f;
+const static NSTimeInterval kXNScrollViewIndicatorAnimationDuration = 0.3f;
+const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
+
+@interface XNScrollViewIndicator : UIView
+
+@property (nonatomic, assign) XNScrollViewIndicatorStyle indicatorStyle;
+
+@end
+
+@implementation XNScrollViewIndicator {
+    XNScrollViewIndicatorStyle _indicatorStyle;
+}
+
+@synthesize indicatorStyle = _indicatorStyle;
+
+- (id)initWithFrame:(CGRect)frame {
+    if ((self = [super initWithFrame:frame])) {
+        [self setOpaque:NO];
+    }
+
+    return self;
+}
+
+- (void)setFrame:(CGRect)frame {
+    [super setFrame:frame];
+
+    [self setNeedsDisplay];
+}
+
+- (void)setIndicatorStyle:(XNScrollViewIndicatorStyle)indicatorStyle {
+    _indicatorStyle = indicatorStyle;
+
+    [self setNeedsDisplay];
+}
+
+- (void)drawRect:(CGRect)rect {
+    CGRect insideRect = CGRectInset(rect, 2.0f, 2.0f);
+    CGFloat insideShortLength = fminf(insideRect.size.width, insideRect.size.height);
+
+    UIColor *lightColor = [UIColor colorWithWhite:1.0f alpha:0.5f];
+    UIColor *darkColor = [UIColor colorWithWhite:0.0f alpha:0.5f];
+
+    if ([self indicatorStyle] == XNScrollViewIndicatorStyleWhite) {
+        [lightColor setFill];
+    } else {
+        [darkColor setFill];
+    }
+
+    UIBezierPath *innerPath = [UIBezierPath bezierPathWithRoundedRect:insideRect cornerRadius:(insideShortLength / 2.0f)];
+    [innerPath fill];
+
+    if ([self indicatorStyle] == XNScrollViewIndicatorStyleDefault) {
+        CGRect outsideRect = CGRectInset(rect, 1.0f, 1.0f);
+        CGFloat outsideShortLength = fminf(outsideRect.size.width, outsideRect.size.height);
+        
+        [lightColor setFill];
+        
+        UIBezierPath *outerPath = [UIBezierPath bezierPathWithRoundedRect:outsideRect cornerRadius:(outsideShortLength / 2.0f)];
+        [outerPath appendPath:innerPath];
+        [outerPath setUsesEvenOddFillRule:YES];
+        [outerPath fill];
+    }
+}
+
+@end
+
 @interface XNScrollView () <XNAnimationDelegate>
 @end
 
@@ -32,10 +99,22 @@ const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
     UIPanGestureRecognizer *_panGestureRecognizer;
     CGPoint _panStartContentOffset;
     XNAnimation *_scrollAnimation;
-    
+
+    UIEdgeInsets _scrollIndicatorInsets;
+    XNScrollViewIndicatorStyle _indicatorStyle;
+    XNScrollViewIndicator *_horizontalScrollIndicator;
+    XNScrollViewIndicator *_verticalScrollIndicator;
+    XNAnimation *_horizontalScrollIndicatorAnimation;
+    XNAnimation *_verticalScrollIndicatorAnimation;
+
     struct {
         BOOL __scrollEnabled:1;
 #define _scrollEnabled _flags.__scrollEnabled
+
+        BOOL __showsHorizontalScrollIndicator;
+#define _showsHorizontalScrollIndicator _flags.__showsHorizontalScrollIndicator
+        BOOL __showsVerticalScrollIndicator;
+#define _showsVerticalScrollIndicator _flags.__showsVerticalScrollIndicator
 
         BOOL __bounces:1;
 #define _bounces _flags.__bounces
@@ -142,6 +221,8 @@ const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
 @synthesize contentSize = _contentSize;
 @synthesize panGestureRecognizer = _panGestureRecognizer;
 @synthesize decelerationRate = _decelerationRate;
+@synthesize indicatorStyle = _indicatorStyle;
+@synthesize scrollIndicatorInsets = _scrollIndicatorInsets;
 
 - (void)setDelegate:(id<XNScrollViewDelegate>)delegate {
     _delegate = delegate;
@@ -176,6 +257,30 @@ const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
 
     XNDecayTimingFunction *timingFunction = (XNDecayTimingFunction *) [_scrollAnimation timingFunction];
     [timingFunction setConstant:decelerationRate];
+}
+
+- (void)setShowsHorizontalScrollIndicator:(BOOL)showsHorizontalScrollIndicator {
+    _showsHorizontalScrollIndicator = showsHorizontalScrollIndicator;
+}
+
+- (BOOL)showsHorizontalScrollIndicator {
+    return _showsHorizontalScrollIndicator;
+}
+
+- (void)setShowsVerticalScrollIndicator:(BOOL)showsVerticalScrollIndicator {
+    _showsVerticalScrollIndicator = showsVerticalScrollIndicator;
+}
+
+- (BOOL)showsVerticalScrollIndicator {
+    return _showsVerticalScrollIndicator;
+}
+
+- (void)setIndicatorStyle:(XNScrollViewIndicatorStyle)indicatorStyle {
+    _indicatorStyle = indicatorStyle;
+}
+
+- (void)setScrollIndicatorInsets:(UIEdgeInsets)scrollIndicatorInsets {
+    _scrollIndicatorInsets = scrollIndicatorInsets;
 }
 
 - (BOOL)bounces {
@@ -254,10 +359,36 @@ const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
     [self removeXNAnimation:_offsetAnimation];
 }
 
+- (void)flashScrollIndicators {
+    [self _cancelScrollIndicatorFlash];
+    [self _updateIndicatorsVisible:YES animated:YES];
+
+    NSTimeInterval duration = (kXNScrollViewIndicatorAnimationDuration + kXNScrollViewIndicatorFlashingDuration);
+    [self performSelector:@selector(_hideScrollIndicatorsAfterFlash) withObject:nil afterDelay:duration];
+}
+
 - (id)initWithFrame:(CGRect)frame {
     if ((self = [super initWithFrame:frame])) {
         _scrollEnabled = YES;
         _bounces = YES;
+
+        _indicatorStyle = XNScrollViewIndicatorStyleDefault;
+        _showsHorizontalScrollIndicator = YES;
+        _showsVerticalScrollIndicator = YES;
+        _scrollIndicatorInsets = UIEdgeInsetsZero;
+        
+        _horizontalScrollIndicator = [[XNScrollViewIndicator alloc] init];
+        [_horizontalScrollIndicator setHidden:YES];
+        _verticalScrollIndicator = [[XNScrollViewIndicator alloc] init];
+        [_verticalScrollIndicator setHidden:YES];
+
+        XNBezierTimingFunction *timingFunction = [XNBezierTimingFunction timingFunctionWithControlPoints:[XNBezierTimingFunction controlPointsEaseInOut]];
+        _horizontalScrollIndicatorAnimation = [[XNAnimation alloc] initWithKeyPath:@"alpha"];
+        [_horizontalScrollIndicatorAnimation setTimingFunction:timingFunction];
+        [_horizontalScrollIndicatorAnimation setDelegate:self];
+        _verticalScrollIndicatorAnimation = [[XNAnimation alloc] initWithKeyPath:@"alpha"];
+        [_verticalScrollIndicatorAnimation setTimingFunction:timingFunction];
+        [_verticalScrollIndicatorAnimation setDelegate:self];
 
         _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(_panFromGestureRecognizer:)];
         [_panGestureRecognizer setMaximumNumberOfTouches:1];
@@ -280,6 +411,11 @@ const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
 - (void)dealloc {
     [self stopScrolling];
 
+    [_horizontalScrollIndicator release];
+    [_verticalScrollIndicator release];
+    [_horizontalScrollIndicatorAnimation release];
+    [_verticalScrollIndicatorAnimation release];
+
     [_panGestureRecognizer release];
     [_scrollAnimation release];
     [_offsetAnimation release];
@@ -287,22 +423,38 @@ const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
     [super dealloc];
 }
 
-#pragma mark - Private Methods
+#pragma mark - Computed State
 
-- (BOOL)_effectiveBouncesHorizontally {
+- (BOOL)_effectiveScrollsHorizontally {
     CGRect bounds = [self bounds];
     CGSize contentSize = [self contentSize];
     UIEdgeInsets contentInset = [self contentInset];
 
-    return [self bounces] && ([self alwaysBounceHorizontal] || (contentInset.left + contentSize.width + contentInset.right > bounds.size.width));
+    return (contentInset.left + contentSize.width + contentInset.right > bounds.size.width);
+}
+
+- (BOOL)_effectiveScrollsVertically {
+    CGRect bounds = [self bounds];
+    CGSize contentSize = [self contentSize];
+    UIEdgeInsets contentInset = [self contentInset];
+
+    return (contentInset.top + contentSize.height + contentInset.bottom > bounds.size.height);
+}
+
+- (BOOL)_effectiveBouncesHorizontally {
+    return [self bounces] && ([self alwaysBounceHorizontal] || [self _effectiveScrollsHorizontally]);
 }
 
 - (BOOL)_effectiveBouncesVertically {
-    CGRect bounds = [self bounds];
-    CGSize contentSize = [self contentSize];
-    UIEdgeInsets contentInset = [self contentInset];
+    return [self bounces] && ([self alwaysBounceVertical] || [self _effectiveScrollsVertically]);
+}
 
-    return [self bounces] && ([self alwaysBounceVertical] || (contentInset.top + contentSize.height + contentInset.bottom > bounds.size.height));
+- (BOOL)_effectiveShowsHorizontalScrollIndicator {
+    return [self showsHorizontalScrollIndicator] && [self _effectiveScrollsHorizontally];
+}
+
+- (BOOL)_effectiveShowsVerticalScrollIndicator {
+    return [self showsVerticalScrollIndicator] && [self _effectiveScrollsVertically];
 }
 
 - (CGRect)_effectiveScrollBounds {
@@ -327,6 +479,8 @@ const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
 
     return scrollBounds;
 }
+
+#pragma mark - Graphical Computation
 
 - (CGFloat)_elasticDistanceForDistance:(CGFloat)distance constant:(CGFloat)constant range:(CGFloat)range {
     if (kXNScrollViewElasticSimpleFormula) {
@@ -382,6 +536,38 @@ const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
     return offset;
 }
 
+- (CGFloat)_lengthForIndicatorWithDimension:(CGFloat)dimension contentDimension:(CGFloat)contentDimension position:(CGFloat)position {
+    CGFloat outside = 0;
+
+    if (position < 0) {
+        outside = fabs(position);
+    } else if (position > contentDimension) {
+        outside = fabs(position - contentDimension);
+    }
+
+    CGFloat partialDisplayed = (dimension / (contentDimension + dimension));
+    CGFloat length = dimension * partialDisplayed;
+    length = length - outside;
+    length = fmax(length, kXNScrollViewIndicatorMinimumDimension);
+    return length;
+}
+
+- (CGFloat)_positionForIndicatorWithDimension:(CGFloat)dimension contentDimension:(CGFloat)contentDimension position:(CGFloat)position {
+    CGFloat length = [self _lengthForIndicatorWithDimension:dimension contentDimension:contentDimension position:position];
+
+    CGFloat partialPosition = (position / (contentDimension + dimension));
+    CGFloat pos = dimension * partialPosition;
+    
+    if (position > contentDimension) {
+        pos = dimension - length;
+    } else if (position < 0) {
+        pos = 0;
+    }
+    
+    return pos;
+}
+
+#pragma mark - Animation Delegate
 
 - (void)animationStopped:(XNAnimation *)animation {
     if (animation == _scrollAnimation) {
@@ -389,8 +575,34 @@ const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
         _scrolling = NO;
         [self _delegateDidEndDecelerating];
         [self _delegateDidEndScrolling];
+
+        [self _updateIndicatorsVisible:NO animated:[animation completed]];
     } else if (animation == _offsetAnimation) {
         [self _delegateDidEndScrollingAnimation];
+    } else if (animation == _horizontalScrollIndicatorAnimation || animation == _verticalScrollIndicatorAnimation) {
+        XNScrollViewIndicator *indicator = nil;
+        
+        if (animation == _horizontalScrollIndicatorAnimation) {
+            indicator = _horizontalScrollIndicator;
+        } else if (animation == _verticalScrollIndicatorAnimation) {
+            indicator = _verticalScrollIndicator;
+        }
+
+        // This is quite a bit of a hack; there should be a better way to get
+        // the needed context to figure out which direction we are going in.
+        BOOL hidden = [[animation fromValue] floatValue] == 0.0f;
+        
+        [indicator setHidden:hidden];
+        [indicator setAlpha:1.0f];
+
+        if ([animation completed]) {
+            if (!hidden) {
+                [indicator removeFromSuperview];
+                [indicator setHidden:YES];
+            } else {
+                [indicator setHidden:NO];
+            }
+        }
     }
 }
 
@@ -418,7 +630,99 @@ const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
 
             [self setContentOffset:offset];
         }
+        
+        [self _layoutScrollIndicators];
     }
+}
+
+#pragma mark - Private Methods
+
+- (void)_layoutIndicator:(XNScrollViewIndicator *)indicator dimension:(CGFloat)dimension contentDimension:(CGFloat)contentDimension position:(CGFloat)position otherVisible:(BOOL)other otherDimension:(CGFloat)otherDimension otherOffset:(CGFloat)otherOffset rotate:(BOOL)rotate {
+    CGFloat edge = (other ? kXNScrollViewIndicatorMinimumDimension : 0);
+
+    dimension = dimension - edge;
+    contentDimension = contentDimension - edge;
+
+    CGFloat length = [self _lengthForIndicatorWithDimension:dimension contentDimension:contentDimension position:position];
+    CGFloat pos = [self _positionForIndicatorWithDimension:dimension contentDimension:contentDimension position:position];
+
+    CGRect frame = [indicator frame];
+    frame.origin.x = pos + position;
+    frame.size.width = length;
+    frame.size.height = kXNScrollViewIndicatorMinimumDimension;
+    frame.origin.y = otherDimension + otherOffset - kXNScrollViewIndicatorMinimumDimension;
+
+    if (rotate) {
+        CGRect rotatedFrame = CGRectZero;
+        rotatedFrame.origin.y = frame.origin.x;
+        rotatedFrame.origin.x = frame.origin.y;
+        rotatedFrame.size.height = frame.size.width;
+        rotatedFrame.size.width = frame.size.height;
+        frame = rotatedFrame;
+    }
+
+    [indicator setFrame:frame];
+}
+
+- (void)_layoutScrollIndicators {
+    CGRect bounds = [self bounds];
+    CGRect scrollBounds = [self _effectiveScrollBounds];
+    CGPoint contentOffset = [self contentOffset];
+    
+    BOOL horizontalVisible = [self _effectiveShowsHorizontalScrollIndicator];
+    BOOL verticalVisible = [self _effectiveShowsVerticalScrollIndicator];
+
+    [self _layoutIndicator:_horizontalScrollIndicator dimension:bounds.size.width contentDimension:scrollBounds.size.width position:contentOffset.x otherVisible:verticalVisible otherDimension:bounds.size.height otherOffset:contentOffset.y rotate:NO];
+    [self _layoutIndicator:_verticalScrollIndicator dimension:bounds.size.height contentDimension:scrollBounds.size.height position:contentOffset.y otherVisible:horizontalVisible otherDimension:bounds.size.width otherOffset:contentOffset.x rotate:YES];
+}
+
+- (void)_updateIndicator:(XNScrollViewIndicator *)indicator visible:(BOOL)visible animation:(XNAnimation *)animation animated:(BOOL)animated {
+    [indicator setIndicatorStyle:[self indicatorStyle]];
+
+    [indicator removeXNAnimation:animation];
+
+    if ([indicator isHidden] != !visible) {
+        if (visible) {
+            [self addSubview:indicator];
+            [indicator setHidden:NO];
+
+            if (animated) {
+                [indicator setAlpha:0.0f];
+
+                [animation setDuration:kXNScrollViewIndicatorAnimationDuration];
+                [animation setFromValue:[NSNumber numberWithFloat:0.0f]];
+                [animation setToValue:[NSNumber numberWithFloat:1.0f]];
+                [indicator addXNAnimation:animation];
+            }
+        } else {
+            if (animated) {
+                [animation setDuration:kXNScrollViewIndicatorAnimationDuration];
+                [animation setFromValue:[NSNumber numberWithFloat:1.0f]];
+                [animation setToValue:[NSNumber numberWithFloat:0.0f]];
+                [indicator addXNAnimation:animation];
+            } else {
+                [indicator removeFromSuperview];
+                [indicator setHidden:YES];
+            }
+        }
+    }
+}
+
+- (void)_updateIndicatorsVisible:(BOOL)visible animated:(BOOL)animated {
+    [self _layoutScrollIndicators];
+
+    BOOL horizontalVisible = (visible && [self _effectiveShowsHorizontalScrollIndicator]);
+    BOOL verticalVisible = (visible && [self _effectiveShowsVerticalScrollIndicator]);
+    [self _updateIndicator:_horizontalScrollIndicator visible:horizontalVisible animation:_horizontalScrollIndicatorAnimation animated:animated];
+    [self _updateIndicator:_verticalScrollIndicator visible:verticalVisible animation:_verticalScrollIndicatorAnimation animated:animated];
+}
+
+- (void)_hideScrollIndicatorsAfterFlash {
+    [self _updateIndicatorsVisible:NO animated:YES];
+}
+
+- (void)_cancelScrollIndicatorFlash {
+    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(_hideScrollIndicatorsAfterFlash) object:nil];
 }
 
 - (void)_panFromGestureRecognizer:(UIPanGestureRecognizer *)recognizer {
@@ -437,6 +741,9 @@ const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
         [self _delegateWillBeginDragging];
         _dragging = YES;
         _scrolling = YES;
+
+        [self _cancelScrollIndicatorFlash];
+        [self _updateIndicatorsVisible:YES animated:NO];
 
         _panStartContentOffset = [self contentOffset];
     } else if (state == UIGestureRecognizerStateCancelled) {
@@ -459,10 +766,14 @@ const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
 
         if (state == UIGestureRecognizerStateChanged) {
             [self setContentOffset:translation];
+
+            [self _layoutScrollIndicators];
         } else if (state == UIGestureRecognizerStateEnded) {
             CGFloat scalarVelocity = sqrtf(velocity.x * velocity.x + velocity.y * velocity.y);
+            BOOL stopped = (scalarVelocity <= kXNScrollViewDecelerationMinimumVelocity);
+            BOOL inside = CGRectContainsPoint(scrollBounds, translation);
 
-            if (scalarVelocity > kXNScrollViewDecelerationMinimumVelocity) {
+            if (!stopped || !inside) {
                 NSValue *fromValue = [NSValue valueWithCGPoint:translation];
                 NSValue *velocityValue = [NSValue valueWithCGPoint:velocity];
                 NSValue *toValue = [XNDecayTimingFunction toValueFromValue:fromValue forVelocity:velocityValue withConstant:[self decelerationRate]];
@@ -496,6 +807,8 @@ const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
                 _scrolling = NO;
                 [self _delegateDidEndDraggingWillDecelerate:NO];
                 [self _delegateDidEndScrolling];
+
+                [self _updateIndicatorsVisible:NO animated:YES];
             }
         }
     }

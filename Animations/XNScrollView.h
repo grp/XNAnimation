@@ -13,6 +13,12 @@
 extern const CGFloat XNScrollViewDecelerationRateNormal;
 extern const CGFloat XNScrollViewDecelerationRateFast;
 
+typedef NS_ENUM(NSInteger, XNScrollViewIndicatorStyle) {
+    XNScrollViewIndicatorStyleDefault,
+    XNScrollViewIndicatorStyleBlack,
+    XNScrollViewIndicatorStyleWhite
+};
+
 @protocol XNScrollViewDelegate;
 
 @interface XNScrollView : UIView
@@ -23,6 +29,7 @@ extern const CGFloat XNScrollViewDecelerationRateFast;
 @property (nonatomic, assign) UIEdgeInsets contentInset;
 @property (nonatomic, assign) CGPoint contentOffset;
 - (void)setContentOffset:(CGPoint)contentOffset animated:(BOOL)animated;
+//- (void)scrollRectToVisible:(CGRect)rect animated:(BOOL)animated;
 
 @property (nonatomic, assign) CGFloat decelerationRate;
 //@property (nonatomic, assign, getter=isDirectionalLockEnabled) BOOL directionalLockEnabled;
@@ -32,21 +39,29 @@ extern const CGFloat XNScrollViewDecelerationRateFast;
 @property (nonatomic, assign) BOOL alwaysBounceVertical;
 @property (nonatomic, assign) BOOL alwaysBounceHorizontal;
 
-//@property (nonatomic) BOOL showsHorizontalScrollIndicator;
-//@property (nonatomic) BOOL showsVerticalScrollIndicator;
-//@property (nonatomic) UIEdgeInsets scrollIndicatorInsets;
-//@property (nonatomic) UIScrollViewIndicatorStyle indicatorStyle;
+@property (nonatomic) BOOL showsHorizontalScrollIndicator;
+@property (nonatomic) BOOL showsVerticalScrollIndicator;
+@property (nonatomic) UIEdgeInsets scrollIndicatorInsets;
+@property (nonatomic) XNScrollViewIndicatorStyle indicatorStyle;
+- (void)flashScrollIndicators;
 
 //@property (nonatomic, assign, getter=isPagingEnabled) BOOL pagingEnabled;
 
 @property (nonatomic, getter=isScrollEnabled) BOOL scrollEnabled;
 - (void)stopScrolling;
 
-@property (nonatomic, readonly, getter=isDecelerating) BOOL decelerating; // decelerating from touch
-@property (nonatomic, readonly, getter=isDragging) BOOL dragging; // touching with finger
-@property (nonatomic, readonly, getter=isScrolling) BOOL scrolling; // not programmatic
+@property (nonatomic, assign, readonly, getter=isDecelerating) BOOL decelerating; // decelerating from touch
+//@property(nonatomic, assign, readonly, getter=isTracking) BOOL tracking;
+@property (nonatomic, assign, readonly, getter=isDragging) BOOL dragging; // touching with finger
+@property (nonatomic, assign, readonly, getter=isScrolling) BOOL scrolling; // not programmatic
 
-@property (nonatomic, readonly) UIPanGestureRecognizer *panGestureRecognizer;
+//@property (nonatomic, assign) BOOL delaysContentTouches;
+//@property (nonatomic, assign) BOOL canCancelContentTouches;
+
+//- (BOOL)touchesShouldBegin:(NSSet *)touches withEvent:(UIEvent *)event inContentView:(UIView *)view;
+//- (BOOL)touchesShouldCancelInContentView:(UIView *)view;
+
+@property (nonatomic, retain, readonly) UIPanGestureRecognizer *panGestureRecognizer;
 
 @end
 
