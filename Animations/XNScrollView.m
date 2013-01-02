@@ -11,7 +11,7 @@
 // iOS 6 introduces a new formula for this, depending on the dimensions of the
 // scroll view as well as a constant. This option can either emulate that new
 // behavior or the previous simple scaling by the defined elastic constant.
-const static BOOL kXNScrollViewElasticSimpleFormula = NO;
+const static BOOL kXNScrollViewElasticSimpleFormula = (__IPHONE_OS_VERSION_MAX_ALLOWED < 60000);
 const static CGFloat kXNScrollViewElasticConstant = 0.55f;
 
 const static CGFloat kXNScrollViewDecelerationMinimumVelocity = 25.0f;
@@ -393,7 +393,7 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
         [_verticalScrollIndicatorAnimation setDelegate:self];
 
         _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(_panFromGestureRecognizer:)];
-        [_panGestureRecognizer setMaximumNumberOfTouches:1];
+        [_panGestureRecognizer setMaximumNumberOfTouches:(kXNScrollViewElasticSimpleFormula ? 1 : INT_MAX)];
         [_panGestureRecognizer setCancelsTouchesInView:YES];
         [self addGestureRecognizer:_panGestureRecognizer];
 

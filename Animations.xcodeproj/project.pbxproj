@@ -87,7 +87,6 @@
 		7D2E788B16602D890006FAE5 = {
 			isa = PBXGroup;
 			children = (
-				7D2E78BD1660355A0006FAE5 /* QuartzCore.framework */,
 				7D2E78A016602D890006FAE5 /* Animations */,
 				7D2E789916602D890006FAE5 /* Frameworks */,
 				7D2E789716602D890006FAE5 /* Products */,
@@ -106,8 +105,9 @@
 			isa = PBXGroup;
 			children = (
 				7D2E789A16602D890006FAE5 /* UIKit.framework */,
-				7D2E789C16602D890006FAE5 /* Foundation.framework */,
+				7D2E78BD1660355A0006FAE5 /* QuartzCore.framework */,
 				7D2E789E16602D890006FAE5 /* CoreGraphics.framework */,
+				7D2E789C16602D890006FAE5 /* Foundation.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -258,6 +258,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -285,6 +286,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN_EMPTY_BODY = YES;

@@ -13,11 +13,13 @@
 extern const CGFloat XNScrollViewDecelerationRateNormal;
 extern const CGFloat XNScrollViewDecelerationRateFast;
 
-typedef NS_ENUM(NSInteger, XNScrollViewIndicatorStyle) {
+enum {
     XNScrollViewIndicatorStyleDefault,
     XNScrollViewIndicatorStyleBlack,
     XNScrollViewIndicatorStyleWhite
 };
+
+typedef NSInteger XNScrollViewIndicatorStyle;
 
 @protocol XNScrollViewDelegate;
 
@@ -55,13 +57,12 @@ typedef NS_ENUM(NSInteger, XNScrollViewIndicatorStyle) {
 @property (nonatomic, assign, readonly, getter=isDragging) BOOL dragging; // touching with finger
 @property (nonatomic, assign, readonly, getter=isScrolling) BOOL scrolling; // not programmatic
 
+@property (nonatomic, retain, readonly) UIPanGestureRecognizer *panGestureRecognizer;
 //@property (nonatomic, assign) BOOL delaysContentTouches;
 //@property (nonatomic, assign) BOOL canCancelContentTouches;
 
 //- (BOOL)touchesShouldBegin:(NSSet *)touches withEvent:(UIEvent *)event inContentView:(UIView *)view;
 //- (BOOL)touchesShouldCancelInContentView:(UIView *)view;
-
-@property (nonatomic, retain, readonly) UIPanGestureRecognizer *panGestureRecognizer;
 
 @end
 
