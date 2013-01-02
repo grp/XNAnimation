@@ -20,7 +20,9 @@ const CGFloat XNScrollViewDecelerationRateNormal = 0.998f;
 const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
 
 const static CGFloat kXNScrollViewIndicatorMinimumDimension = 9.0f;
-const static NSTimeInterval kXNScrollViewIndicatorAnimationDuration = 0.3f;
+const static CGFloat kXNScrollViewIndicatorMinimumInsideLength = 36.0f;
+const static CGFloat kXNScrollViewIndicatorCornerDimension = 8.0f;
+const static NSTimeInterval kXNScrollViewIndicatorAnimationDuration = 0.25f;
 const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
 @interface XNScrollViewIndicator : UIView
@@ -126,9 +128,9 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
         BOOL __dragging:1;
 #define _dragging _flags.__dragging
         BOOL __decelerating:1;
-#define _decelerating _flags.__dragging
+#define _decelerating _flags.__decelerating
         BOOL __scrolling:1;
-#define _scrolling _flags.__dragging
+#define _scrolling _flags.__scrolling
     } _flags;
 
     id<XNScrollViewDelegate> _delegate;
@@ -538,17 +540,21 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
 - (CGFloat)_lengthForIndicatorWithDimension:(CGFloat)dimension contentDimension:(CGFloat)contentDimension position:(CGFloat)position {
     CGFloat outside = 0;
+    CGFloat minimum = kXNScrollViewIndicatorMinimumInsideLength;
 
     if (position < 0) {
         outside = fabs(position);
+        minimum = kXNScrollViewIndicatorMinimumDimension;
     } else if (position > contentDimension) {
         outside = fabs(position - contentDimension);
+        minimum = kXNScrollViewIndicatorMinimumDimension;
     }
 
     CGFloat partialDisplayed = (dimension / (contentDimension + dimension));
     CGFloat length = dimension * partialDisplayed;
+    length = fmax(length, kXNScrollViewIndicatorMinimumInsideLength);
     length = length - outside;
-    length = fmax(length, kXNScrollViewIndicatorMinimumDimension);
+    length = fmax(length, minimum);
     return length;
 }
 
@@ -630,27 +636,28 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
             [self setContentOffset:offset];
         }
-        
+
         [self _layoutScrollIndicators];
     }
 }
 
 #pragma mark - Private Methods
 
-- (void)_layoutIndicator:(XNScrollViewIndicator *)indicator dimension:(CGFloat)dimension contentDimension:(CGFloat)contentDimension position:(CGFloat)position otherVisible:(BOOL)other otherDimension:(CGFloat)otherDimension otherOffset:(CGFloat)otherOffset rotate:(BOOL)rotate {
-    CGFloat edge = (other ? kXNScrollViewIndicatorMinimumDimension : 0);
+- (void)_layoutIndicator:(XNScrollViewIndicator *)indicator dimension:(CGFloat)dimension contentDimension:(CGFloat)contentDimension position:(CGFloat)position otherVisible:(BOOL)other otherDimension:(CGFloat)otherDimension otherOffset:(CGFloat)otherOffset insetStart:(CGFloat)insetStart insetEnd:(CGFloat)insetEnd insetOppositeStart:(CGFloat)insetOppositeStart insetOppositeEnd:(CGFloat)insetOppositeEnd rotate:(BOOL)rotate {
+    CGFloat edge = (other ? kXNScrollViewIndicatorCornerDimension : 0) + (insetStart + insetEnd);
 
-    dimension = dimension - edge;
-    contentDimension = contentDimension - edge;
+    CGFloat indicatorDimension = dimension - edge;
+    CGFloat indicatorContentDimension = contentDimension - edge;
+    CGFloat indicatorPosition = position * (contentDimension / indicatorContentDimension);
 
-    CGFloat length = [self _lengthForIndicatorWithDimension:dimension contentDimension:contentDimension position:position];
-    CGFloat pos = [self _positionForIndicatorWithDimension:dimension contentDimension:contentDimension position:position];
+    CGFloat length = [self _lengthForIndicatorWithDimension:indicatorDimension contentDimension:indicatorContentDimension position:indicatorPosition];
+    CGFloat pos = [self _positionForIndicatorWithDimension:indicatorDimension contentDimension:indicatorContentDimension position:indicatorPosition];
 
-    CGRect frame = [indicator frame];
-    frame.origin.x = pos + position;
+    CGRect frame = CGRectZero;
+    frame.origin.x = insetStart + pos + position;
     frame.size.width = length;
     frame.size.height = kXNScrollViewIndicatorMinimumDimension;
-    frame.origin.y = otherDimension + otherOffset - kXNScrollViewIndicatorMinimumDimension;
+    frame.origin.y = otherDimension + otherOffset - kXNScrollViewIndicatorMinimumDimension - insetOppositeEnd;
 
     if (rotate) {
         CGRect rotatedFrame = CGRectZero;
@@ -668,12 +675,13 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
     CGRect bounds = [self bounds];
     CGRect scrollBounds = [self _effectiveScrollBounds];
     CGPoint contentOffset = [self contentOffset];
+    UIEdgeInsets indicatorInsets = [self scrollIndicatorInsets];
     
     BOOL horizontalVisible = [self _effectiveShowsHorizontalScrollIndicator];
     BOOL verticalVisible = [self _effectiveShowsVerticalScrollIndicator];
 
-    [self _layoutIndicator:_horizontalScrollIndicator dimension:bounds.size.width contentDimension:scrollBounds.size.width position:contentOffset.x otherVisible:verticalVisible otherDimension:bounds.size.height otherOffset:contentOffset.y rotate:NO];
-    [self _layoutIndicator:_verticalScrollIndicator dimension:bounds.size.height contentDimension:scrollBounds.size.height position:contentOffset.y otherVisible:horizontalVisible otherDimension:bounds.size.width otherOffset:contentOffset.x rotate:YES];
+    [self _layoutIndicator:_horizontalScrollIndicator dimension:bounds.size.width contentDimension:scrollBounds.size.width position:contentOffset.x otherVisible:verticalVisible otherDimension:bounds.size.height otherOffset:contentOffset.y insetStart:indicatorInsets.left insetEnd:indicatorInsets.right insetOppositeStart:indicatorInsets.top insetOppositeEnd:indicatorInsets.bottom rotate:NO];
+    [self _layoutIndicator:_verticalScrollIndicator dimension:bounds.size.height contentDimension:scrollBounds.size.height position:contentOffset.y otherVisible:horizontalVisible otherDimension:bounds.size.width otherOffset:contentOffset.x insetStart:indicatorInsets.top insetEnd:indicatorInsets.bottom insetOppositeStart:indicatorInsets.left insetOppositeEnd:indicatorInsets.right rotate:YES];
 }
 
 - (void)_updateIndicator:(XNScrollViewIndicator *)indicator visible:(BOOL)visible animation:(XNAnimation *)animation animated:(BOOL)animated {

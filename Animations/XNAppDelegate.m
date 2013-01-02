@@ -113,6 +113,8 @@ UISlider *_m, *_b, *_k;
     [self.window addSubview:_k];
 
     sv = [[XNScrollView alloc] initWithFrame:self.window.bounds];
+    [sv setIndicatorStyle:XNScrollViewIndicatorStyleDefault];
+    [sv setScrollIndicatorInsets:UIEdgeInsetsMake(20, 0, 0, 0)];
     [sv setContentSize:CGSizeMake(self.window.bounds.size.width * 5, self.window.bounds.size.height * 5)];
     [sv setShowsHorizontalScrollIndicator:YES];
     [self.window addSubview:sv];
