@@ -131,13 +131,7 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
             for (UITouch *touch in touches) {
                 UIView *view = [touch view];
 
-                if (view == _scrollView) {
-                    continue;
-                }
-
-                if ([_scrollView touchesShouldCancelInContentView:view]) {
-                    cancel = YES;
-                } else {
+                if (view != _scrollView && ![_scrollView touchesShouldCancelInContentView:view]) {
                     cancel = NO;
                     break;
                 }
