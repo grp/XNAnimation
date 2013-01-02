@@ -59,10 +59,10 @@ typedef NSInteger XNScrollViewIndicatorStyle;
 
 @property (nonatomic, retain, readonly) UIPanGestureRecognizer *panGestureRecognizer;
 //@property (nonatomic, assign) BOOL delaysContentTouches;
-//@property (nonatomic, assign) BOOL canCancelContentTouches;
+@property (nonatomic, assign) BOOL canCancelContentTouches;
 
 //- (BOOL)touchesShouldBegin:(NSSet *)touches withEvent:(UIEvent *)event inContentView:(UIView *)view;
-//- (BOOL)touchesShouldCancelInContentView:(UIView *)view;
+- (BOOL)touchesShouldCancelInContentView:(UIView *)view;
 
 @end
 

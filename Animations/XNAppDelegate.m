@@ -22,6 +22,15 @@
 @property (nonatomic, assign) CGFloat velocity;
 @end
 
+@interface XYZ:UIScrollView
+@end
+@implementation XYZ
+- (BOOL)touchesShouldCancelInContentView:(UIView *)view {
+    return YES;
+}
+@end
+
+
 @implementation XNAppDelegate {
     UISegmentedControl *s;
 }

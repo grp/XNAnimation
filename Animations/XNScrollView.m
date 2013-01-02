@@ -6,6 +6,8 @@
 //  Copyright (c) 2012 Xuzz Productions, LLC. All rights reserved.
 //
 
+#import <UIKit/UIGestureRecognizerSubclass.h>
+
 #import "XNScrollView.h"
 
 // iOS 6 introduces a new formula for this, depending on the dimensions of the
@@ -88,6 +90,68 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
 @end
 
+@interface XNScrollViewPanGestureRecognizer : UIPanGestureRecognizer
+
+- (id)initWithTarget:(id)target action:(SEL)action scrollView:(XNScrollView *)scrollView;
+@property (nonatomic, assign, readonly) XNScrollView *scrollView;
+
+@end
+
+@implementation XNScrollViewPanGestureRecognizer {
+    XNScrollView *_scrollView;
+}
+
+@synthesize scrollView = _scrollView;
+
+- (id)initWithTarget:(id)target action:(SEL)action scrollView:(XNScrollView *)scrollView {
+    if ((self = [super initWithTarget:target action:action])) {
+        _scrollView = scrollView;
+    }
+
+    return self;
+}
+
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+    if ([_scrollView isDecelerating]) {
+        [self setState:UIGestureRecognizerStateBegan];
+    }
+
+    [super touchesBegan:touches withEvent:event];
+}
+
+- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+    [super touchesMoved:touches withEvent:event];
+
+    if ([self state] == UIGestureRecognizerStateBegan) {
+        BOOL cancel = [_scrollView canCancelContentTouches];
+
+        if (cancel) {
+            NSSet *touches = [event touchesForGestureRecognizer:self];
+
+            for (UITouch *touch in touches) {
+                UIView *view = [touch view];
+
+                if (view == _scrollView) {
+                    continue;
+                }
+
+                if ([_scrollView touchesShouldCancelInContentView:view]) {
+                    cancel = YES;
+                } else {
+                    cancel = NO;
+                    break;
+                }
+            }
+        }
+
+        if (!cancel) {
+            [self setState:UIGestureRecognizerStateFailed];
+        }
+    }
+}
+
+@end
+
 @interface XNScrollView () <XNAnimationDelegate>
 @end
 
@@ -98,7 +162,7 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
     CGFloat _decelerationRate;
 
-    UIPanGestureRecognizer *_panGestureRecognizer;
+    XNScrollViewPanGestureRecognizer *_panGestureRecognizer;
     CGPoint _panStartContentOffset;
     XNAnimation *_scrollAnimation;
 
@@ -113,10 +177,14 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
         BOOL __scrollEnabled:1;
 #define _scrollEnabled _flags.__scrollEnabled
 
-        BOOL __showsHorizontalScrollIndicator;
+        BOOL __showsHorizontalScrollIndicator:1;
 #define _showsHorizontalScrollIndicator _flags.__showsHorizontalScrollIndicator
-        BOOL __showsVerticalScrollIndicator;
+        BOOL __showsVerticalScrollIndicator:1;
 #define _showsVerticalScrollIndicator _flags.__showsVerticalScrollIndicator
+        BOOL __horizontalScrollIndicatorVisible:1;
+#define _horizontalScrollIndicatorVisible _flags.__horizontalScrollIndicatorVisible
+        BOOL __verticalScrollIndicatorVisible:1;
+#define _verticalScrollIndicatorVisible _flags.__verticalScrollIndicatorVisible
 
         BOOL __bounces:1;
 #define _bounces _flags.__bounces
@@ -131,6 +199,9 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 #define _decelerating _flags.__decelerating
         BOOL __scrolling:1;
 #define _scrolling _flags.__scrolling
+
+        BOOL __canCancelContentTouches:1;
+#define _canCancelContentTouches _flags.__canCancelContentTouches
     } _flags;
 
     id<XNScrollViewDelegate> _delegate;
@@ -252,6 +323,8 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
     [self setBounds:bounds];
 
     [self _delegateDidScroll];
+
+    [self _layoutScrollIndicators];
 }
 
 - (void)setDecelerationRate:(CGFloat)decelerationRate {
@@ -331,6 +404,17 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
     if (![self isScrollEnabled] && [self isScrolling]) {
         [self stopScrolling];
     }
+
+    UIPanGestureRecognizer *panGestureRecognizer = [self panGestureRecognizer];
+    [panGestureRecognizer setEnabled:scrollEnabled];
+}
+
+- (BOOL)canCancelContentTouches {
+    return _canCancelContentTouches;
+}
+
+- (void)setCanCancelContentTouches:(BOOL)canCancelContentTouches {
+    _canCancelContentTouches = canCancelContentTouches;
 }
 
 #pragma mark - Methods
@@ -393,6 +477,23 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
     [self removeXNAnimation:_offsetAnimation];
 }
 
+- (void)removeFromSuperview {
+    [self stopScrolling];
+    [super removeFromSuperview];
+}
+
+- (BOOL)touchesShouldCancelInContentView:(UIView *)view {
+    if ([view isKindOfClass:[UIControl class]]) {
+        UIControl *control = (UIControl *) view;
+
+        if ([control isEnabled]) {
+            return NO;
+        }
+    }
+
+    return YES;
+}
+
 - (void)flashScrollIndicators {
     [self _cancelScrollIndicatorFlash];
     [self _updateIndicatorsVisible:YES animated:YES];
@@ -412,30 +513,32 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
         _scrollIndicatorInsets = UIEdgeInsetsZero;
         
         _horizontalScrollIndicator = [[XNScrollViewIndicator alloc] init];
-        [_horizontalScrollIndicator setHidden:YES];
         _verticalScrollIndicator = [[XNScrollViewIndicator alloc] init];
-        [_verticalScrollIndicator setHidden:YES];
+        _horizontalScrollIndicatorVisible = NO;
+        _verticalScrollIndicatorVisible = NO;
 
-        XNBezierTimingFunction *timingFunction = [XNBezierTimingFunction timingFunctionWithControlPoints:[XNBezierTimingFunction controlPointsEaseInOut]];
+        XNBezierTimingFunction *indicatorTimingFunction = [XNBezierTimingFunction timingFunctionWithControlPoints:[XNBezierTimingFunction controlPointsEaseInOut]];
         _horizontalScrollIndicatorAnimation = [[XNAnimation alloc] initWithKeyPath:@"alpha"];
-        [_horizontalScrollIndicatorAnimation setTimingFunction:timingFunction];
+        [_horizontalScrollIndicatorAnimation setTimingFunction:indicatorTimingFunction];
         [_horizontalScrollIndicatorAnimation setDelegate:self];
         _verticalScrollIndicatorAnimation = [[XNAnimation alloc] initWithKeyPath:@"alpha"];
-        [_verticalScrollIndicatorAnimation setTimingFunction:timingFunction];
+        [_verticalScrollIndicatorAnimation setTimingFunction:indicatorTimingFunction];
         [_verticalScrollIndicatorAnimation setDelegate:self];
 
-        _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(_panFromGestureRecognizer:)];
+        _panGestureRecognizer = [[XNScrollViewPanGestureRecognizer alloc] initWithTarget:self action:@selector(_panFromGestureRecognizer:) scrollView:self];
         [_panGestureRecognizer setMaximumNumberOfTouches:(kXNScrollViewElasticSimpleFormula ? 1 : INT_MAX)];
-        [_panGestureRecognizer setCancelsTouchesInView:YES];
+        [_panGestureRecognizer setDelaysTouchesEnded:NO];
         [self addGestureRecognizer:_panGestureRecognizer];
 
+        _canCancelContentTouches = YES;
+        
         _scrollAnimation = [[XNAnimation alloc] initWithKeyPath:@"contentOffset"];
         [_scrollAnimation setTimingFunction:[XNDecayTimingFunction timingFunction]];
         [self setDecelerationRate:XNScrollViewDecelerationRateNormal];
         [_scrollAnimation setDelegate:self];
 
         _offsetAnimation = [[XNAnimation alloc] initWithKeyPath:@"contentOffset"];
-        [_offsetAnimation setTimingFunction:[XNSpringTimingFunction timingFunction]];
+        [_offsetAnimation setTimingFunction:[XNSpringTimingFunction timingFunctionWithTension:100.0f damping:20.0f mass:1.0f]];
         [_offsetAnimation setDelegate:self];
     }
 
@@ -452,6 +555,7 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
     [_panGestureRecognizer release];
     [_scrollAnimation release];
+
     [_offsetAnimation release];
 
     [super dealloc];
@@ -619,27 +723,20 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
         [self _delegateDidEndScrollingAnimation];
     } else if (animation == _horizontalScrollIndicatorAnimation || animation == _verticalScrollIndicatorAnimation) {
         XNScrollViewIndicator *indicator = nil;
+        BOOL visible = NO;
         
         if (animation == _horizontalScrollIndicatorAnimation) {
             indicator = _horizontalScrollIndicator;
+            visible = _horizontalScrollIndicatorVisible;
         } else if (animation == _verticalScrollIndicatorAnimation) {
             indicator = _verticalScrollIndicator;
+            visible = _verticalScrollIndicatorVisible;
         }
-
-        // This is quite a bit of a hack; there should be a better way to get
-        // the needed context to figure out which direction we are going in.
-        BOOL hidden = [[animation fromValue] floatValue] == 0.0f;
         
-        [indicator setHidden:hidden];
         [indicator setAlpha:1.0f];
 
-        if ([animation completed]) {
-            if (!hidden) {
-                [indicator removeFromSuperview];
-                [indicator setHidden:YES];
-            } else {
-                [indicator setHidden:NO];
-            }
+        if ([animation completed] && !visible) {
+            [indicator removeFromSuperview];
         }
     }
 }
@@ -668,8 +765,6 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
             [self setContentOffset:offset];
         }
-
-        [self _layoutScrollIndicators];
     }
 }
 
@@ -712,19 +807,23 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
     BOOL horizontalVisible = [self _effectiveShowsHorizontalScrollIndicator];
     BOOL verticalVisible = [self _effectiveShowsVerticalScrollIndicator];
 
-    [self _layoutIndicator:_horizontalScrollIndicator dimension:bounds.size.width contentDimension:scrollBounds.size.width position:contentOffset.x otherVisible:verticalVisible otherDimension:bounds.size.height otherOffset:contentOffset.y insetStart:indicatorInsets.left insetEnd:indicatorInsets.right insetOppositeStart:indicatorInsets.top insetOppositeEnd:indicatorInsets.bottom rotate:NO];
-    [self _layoutIndicator:_verticalScrollIndicator dimension:bounds.size.height contentDimension:scrollBounds.size.height position:contentOffset.y otherVisible:horizontalVisible otherDimension:bounds.size.width otherOffset:contentOffset.x insetStart:indicatorInsets.top insetEnd:indicatorInsets.bottom insetOppositeStart:indicatorInsets.left insetOppositeEnd:indicatorInsets.right rotate:YES];
+    if (horizontalVisible) {
+        [self _layoutIndicator:_horizontalScrollIndicator dimension:bounds.size.width contentDimension:scrollBounds.size.width position:contentOffset.x otherVisible:verticalVisible otherDimension:bounds.size.height otherOffset:contentOffset.y insetStart:indicatorInsets.left insetEnd:indicatorInsets.right insetOppositeStart:indicatorInsets.top insetOppositeEnd:indicatorInsets.bottom rotate:NO];
+    }
+
+    if (verticalVisible) {
+        [self _layoutIndicator:_verticalScrollIndicator dimension:bounds.size.height contentDimension:scrollBounds.size.height position:contentOffset.y otherVisible:horizontalVisible otherDimension:bounds.size.width otherOffset:contentOffset.x insetStart:indicatorInsets.top insetEnd:indicatorInsets.bottom insetOppositeStart:indicatorInsets.left insetOppositeEnd:indicatorInsets.right rotate:YES];
+    }
 }
 
-- (void)_updateIndicator:(XNScrollViewIndicator *)indicator visible:(BOOL)visible animation:(XNAnimation *)animation animated:(BOOL)animated {
+- (void)_updateIndicator:(XNScrollViewIndicator *)indicator visible:(BOOL)visible wasVisible:(BOOL)wasVisible animation:(XNAnimation *)animation animated:(BOOL)animated {
     [indicator setIndicatorStyle:[self indicatorStyle]];
 
     [indicator removeXNAnimation:animation];
 
-    if ([indicator isHidden] != !visible) {
+    if (wasVisible != visible) {
         if (visible) {
             [self addSubview:indicator];
-            [indicator setHidden:NO];
 
             if (animated) {
                 [indicator setAlpha:0.0f];
@@ -742,7 +841,6 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
                 [indicator addXNAnimation:animation];
             } else {
                 [indicator removeFromSuperview];
-                [indicator setHidden:YES];
             }
         }
     }
@@ -753,8 +851,10 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
     BOOL horizontalVisible = (visible && [self _effectiveShowsHorizontalScrollIndicator]);
     BOOL verticalVisible = (visible && [self _effectiveShowsVerticalScrollIndicator]);
-    [self _updateIndicator:_horizontalScrollIndicator visible:horizontalVisible animation:_horizontalScrollIndicatorAnimation animated:animated];
-    [self _updateIndicator:_verticalScrollIndicator visible:verticalVisible animation:_verticalScrollIndicatorAnimation animated:animated];
+    [self _updateIndicator:_horizontalScrollIndicator visible:horizontalVisible wasVisible:_horizontalScrollIndicatorVisible animation:_horizontalScrollIndicatorAnimation animated:animated];
+    [self _updateIndicator:_verticalScrollIndicator visible:verticalVisible wasVisible:_verticalScrollIndicatorVisible animation:_verticalScrollIndicatorAnimation animated:animated];
+    _horizontalScrollIndicatorVisible = horizontalVisible;
+    _verticalScrollIndicatorVisible = verticalVisible;
 }
 
 - (void)_hideScrollIndicatorsAfterFlash {
@@ -767,10 +867,6 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
 - (void)_panFromGestureRecognizer:(UIPanGestureRecognizer *)recognizer {
     NSAssert(recognizer == _panGestureRecognizer, @"invalid recognizer");
-
-    if (![self isScrollEnabled]) {
-        return;
-    }
 
     UIGestureRecognizerState state = [_panGestureRecognizer state];
 
@@ -806,8 +902,6 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
         if (state == UIGestureRecognizerStateChanged) {
             [self setContentOffset:translation];
-
-            [self _layoutScrollIndicators];
         } else if (state == UIGestureRecognizerStateEnded) {
             CGFloat scalarVelocity = sqrtf(velocity.x * velocity.x + velocity.y * velocity.y);
             BOOL stopped = (scalarVelocity <= kXNScrollViewDecelerationMinimumVelocity);
