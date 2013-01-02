@@ -31,7 +31,7 @@ typedef NSInteger XNScrollViewIndicatorStyle;
 @property (nonatomic, assign) UIEdgeInsets contentInset;
 @property (nonatomic, assign) CGPoint contentOffset;
 - (void)setContentOffset:(CGPoint)contentOffset animated:(BOOL)animated;
-//- (void)scrollRectToVisible:(CGRect)rect animated:(BOOL)animated;
+- (void)scrollRectToVisible:(CGRect)rect animated:(BOOL)animated;
 
 @property (nonatomic, assign) CGFloat decelerationRate;
 //@property (nonatomic, assign, getter=isDirectionalLockEnabled) BOOL directionalLockEnabled;

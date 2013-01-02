@@ -337,6 +337,8 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
 - (void)setContentOffset:(CGPoint)contentOffset animated:(BOOL)animated {
     if (animated) {
+        [self stopScrolling];
+
         NSValue *fromValue = [NSValue valueWithCGPoint:[self contentOffset]];
         NSValue *toValue = [NSValue valueWithCGPoint:contentOffset];
         NSValue *velocityValue = [NSValue valueWithCGPoint:CGPointZero];
@@ -349,6 +351,36 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
     } else {
         [self setContentOffset:contentOffset];
     }
+}
+
+- (void)scrollRectToVisible:(CGRect)rect animated:(BOOL)animated {
+    CGPoint topLeft = rect.origin;
+    CGPoint bottomRight = CGPointMake(CGRectGetMaxX(rect), CGRectGetMaxY(rect));
+
+    CGPoint contentOffset = [self contentOffset];
+    CGRect bounds = [self bounds];
+    CGRect visibleRect = { contentOffset, bounds.size };
+
+    if (CGRectContainsPoint(visibleRect, topLeft) && CGRectContainsPoint(visibleRect, bottomRight)) {
+        return;
+    }
+
+    CGPoint visibleTopLeft = contentOffset;
+    CGPoint visibleBottomRight = CGPointMake(contentOffset.x + bounds.size.width, contentOffset.y + bounds.size.height);
+
+    if (topLeft.x < visibleTopLeft.x) {
+        contentOffset.x = topLeft.x;
+    } else if (bottomRight.x > visibleBottomRight.x) {
+        contentOffset.x += (bottomRight.x - visibleBottomRight.x);
+    }
+
+    if (topLeft.y < visibleTopLeft.y) {
+        contentOffset.y = topLeft.y;
+    } else if (bottomRight.y > visibleBottomRight.y) {
+        contentOffset.y += (bottomRight.y - visibleBottomRight.y);
+    }
+
+    [self setContentOffset:contentOffset animated:animated];
 }
 
 - (void)stopScrolling {

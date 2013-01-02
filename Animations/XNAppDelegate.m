@@ -157,7 +157,7 @@ UISlider *_m, *_b, *_k;
     [sb removeAllXNAnimations];
 
     [sv flashScrollIndicators];
-
+    
     o = i;
 }
 
