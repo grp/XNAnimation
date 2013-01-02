@@ -37,7 +37,7 @@
 
         _activeAnimations = [[NSMutableDictionary alloc] init];
 
-        _then = [NSDate timeIntervalSinceReferenceDate];
+        _then = CACurrentMediaTime();
     }
 
     return self;
@@ -103,7 +103,7 @@
 }
 
 - (void)frameFromDisplayLink:(CADisplayLink *)displayLink {
-    NSTimeInterval now = [NSDate timeIntervalSinceReferenceDate];
+    NSTimeInterval now = CACurrentMediaTime();
     NSTimeInterval frame = now - _then;
     _then = now;
 
