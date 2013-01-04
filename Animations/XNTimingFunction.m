@@ -70,6 +70,8 @@
             position = [self simulateIndex:i elapsed:elapsed duration:duration from:from to:to complete:&complete];
         }
 
+        NSAssert(!isnan(position), @"position cannot be NaN");
+
         if (outComplete != NULL) {
             *outComplete = (*outComplete && complete);
         }

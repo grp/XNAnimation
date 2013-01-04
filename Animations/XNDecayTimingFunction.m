@@ -13,7 +13,7 @@ const static CGFloat kXNDecayTimingFunctionTemporalSensitivity = 1000.0f;
 
 const static CGFloat kXNDecayTimingFunctionDefaultConstant = 0.998f;
 const static CGFloat kXNDecayTimingFunctionDefaultBounce = 0.99f;
-const static CGFloat kXNDecayTimingFunctionDefaultSensitivity = 0.05f;
+const static CGFloat kXNDecayTimingFunctionDefaultSensitivity = 0.01f;
 
 @implementation XNDecayTimingFunction {
     NSArray *_insideComponents;
@@ -69,10 +69,10 @@ static CGFloat XNDecayTimingFunctionBouncingDistanceAtTime(CGFloat c, CGFloat b,
         return from;
     }
 
-    CGFloat s = sensitivity / kXNDecayTimingFunctionTemporalSensitivity;
     CGFloat v0 = velocity / kXNDecayTimingFunctionTemporalSensitivity;
-    
-    CGFloat t = logf(s / fabs(v0)) / logf(constant) * kXNDecayTimingFunctionTemporalSensitivity;
+
+    // Solve for time when velocity = sensitivity.
+    CGFloat t = logf(sensitivity / fabs(v0)) / logf(constant);
     CGFloat x = XNDecayTimingFunctionSimpleDistanceAtTime(constant, t, v0, from);
 
     return x;
@@ -179,7 +179,6 @@ static CGFloat XNDecayTimingFunctionBouncingDistanceAtTime(CGFloat c, CGFloat b,
     CGFloat c = _constant;
     CGFloat b = _bounce;
     
-    CGFloat s = _sensitivity / kXNDecayTimingFunctionTemporalSensitivity;
     CGFloat v0 = velocity / kXNDecayTimingFunctionTemporalSensitivity;
     CGFloat t = elapsed * kXNDecayTimingFunctionTemporalSensitivity;
 
@@ -223,9 +222,7 @@ static CGFloat XNDecayTimingFunctionBouncingDistanceAtTime(CGFloat c, CGFloat b,
         x = XNDecayTimingFunctionBouncingDistanceAtTime(c, b, tAfterSwitch, vSwitch, xSwitch, to);
     }
 
-    assert(!isnan(x));
-
-    if (fabs(v) <= s && fabs(x - to) <= _sensitivity) {
+    if (fabs(v) <= _sensitivity && fabs(x - to) < _sensitivity) {
         *outComplete = YES;
         return to;
     } else {
