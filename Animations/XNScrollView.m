@@ -329,9 +329,9 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
     bounds.origin = contentOffset;
     [self setBounds:bounds];
 
-    [self _delegateDidScroll];
-
     [self _layoutScrollIndicators];
+
+    [self _delegateDidScroll];
 }
 
 - (void)setDecelerationRate:(CGFloat)decelerationRate {
