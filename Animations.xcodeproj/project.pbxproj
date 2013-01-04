@@ -9,6 +9,13 @@
 /* Begin PBXBuildFile section */
 		7D0F0043166424A200CD4F48 /* XNKeyValueExtractor.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D0F0042166424A200CD4F48 /* XNKeyValueExtractor.m */; };
 		7D0F00461666D2EF00CD4F48 /* XNDecayTimingFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D0F00451666D2EF00CD4F48 /* XNDecayTimingFunction.m */; };
+		7D2752751696A57700556A71 /* NSIndexPath+XNTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D2752671696A57700556A71 /* NSIndexPath+XNTableView.m */; };
+		7D2752761696A57700556A71 /* XNTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D2752691696A57700556A71 /* XNTableView.m */; };
+		7D2752781696A57700556A71 /* XNTableViewCellSeparator.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D27526E1696A57700556A71 /* XNTableViewCellSeparator.m */; };
+		7D2752791696A57700556A71 /* XNTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D2752701696A57700556A71 /* XNTableViewController.m */; };
+		7D27527A1696A57700556A71 /* XNTableViewSection.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D2752721696A57700556A71 /* XNTableViewSection.m */; };
+		7D2752801696A5CB00556A71 /* XNTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D27527C1696A5C900556A71 /* XNTableViewCell.m */; };
+		7D2752811696A5CB00556A71 /* XNTableViewSectionLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D27527F1696A5CA00556A71 /* XNTableViewSectionLabel.m */; };
 		7D2E789B16602D890006FAE5 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D2E789A16602D890006FAE5 /* UIKit.framework */; };
 		7D2E789D16602D890006FAE5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D2E789C16602D890006FAE5 /* Foundation.framework */; };
 		7D2E789F16602D890006FAE5 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D2E789E16602D890006FAE5 /* CoreGraphics.framework */; };
@@ -35,6 +42,21 @@
 		7D0F0042166424A200CD4F48 /* XNKeyValueExtractor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XNKeyValueExtractor.m; sourceTree = "<group>"; };
 		7D0F00441666D2EF00CD4F48 /* XNDecayTimingFunction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XNDecayTimingFunction.h; sourceTree = "<group>"; };
 		7D0F00451666D2EF00CD4F48 /* XNDecayTimingFunction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XNDecayTimingFunction.m; sourceTree = "<group>"; };
+		7D2752661696A57700556A71 /* NSIndexPath+XNTableView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSIndexPath+XNTableView.h"; sourceTree = "<group>"; };
+		7D2752671696A57700556A71 /* NSIndexPath+XNTableView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSIndexPath+XNTableView.m"; sourceTree = "<group>"; };
+		7D2752681696A57700556A71 /* XNTableView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XNTableView.h; sourceTree = "<group>"; };
+		7D2752691696A57700556A71 /* XNTableView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XNTableView.m; sourceTree = "<group>"; };
+		7D27526A1696A57700556A71 /* XNTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XNTableViewCell.h; sourceTree = "<group>"; };
+		7D27526E1696A57700556A71 /* XNTableViewCellSeparator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XNTableViewCellSeparator.m; sourceTree = "<group>"; };
+		7D27526F1696A57700556A71 /* XNTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XNTableViewController.h; sourceTree = "<group>"; };
+		7D2752701696A57700556A71 /* XNTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XNTableViewController.m; sourceTree = "<group>"; };
+		7D2752711696A57700556A71 /* XNTableViewSection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XNTableViewSection.h; sourceTree = "<group>"; };
+		7D2752721696A57700556A71 /* XNTableViewSection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XNTableViewSection.m; sourceTree = "<group>"; };
+		7D2752731696A57700556A71 /* XNTableViewSectionLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XNTableViewSectionLabel.h; sourceTree = "<group>"; };
+		7D27527C1696A5C900556A71 /* XNTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XNTableViewCell.m; sourceTree = "<group>"; };
+		7D27527D1696A5C900556A71 /* XNTableViewCell+UIPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "XNTableViewCell+UIPrivate.h"; sourceTree = "<group>"; };
+		7D27527E1696A5C900556A71 /* XNTableViewCellSeparator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XNTableViewCellSeparator.h; sourceTree = "<group>"; };
+		7D27527F1696A5CA00556A71 /* XNTableViewSectionLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XNTableViewSectionLabel.m; sourceTree = "<group>"; };
 		7D2E789616602D890006FAE5 /* Animations.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Animations.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7D2E789A16602D890006FAE5 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		7D2E789C16602D890006FAE5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -84,6 +106,28 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7D2752641696A56400556A71 /* table */ = {
+			isa = PBXGroup;
+			children = (
+				7D2752661696A57700556A71 /* NSIndexPath+XNTableView.h */,
+				7D2752671696A57700556A71 /* NSIndexPath+XNTableView.m */,
+				7D2752681696A57700556A71 /* XNTableView.h */,
+				7D2752691696A57700556A71 /* XNTableView.m */,
+				7D27527D1696A5C900556A71 /* XNTableViewCell+UIPrivate.h */,
+				7D27526A1696A57700556A71 /* XNTableViewCell.h */,
+				7D27527C1696A5C900556A71 /* XNTableViewCell.m */,
+				7D27527E1696A5C900556A71 /* XNTableViewCellSeparator.h */,
+				7D27526E1696A57700556A71 /* XNTableViewCellSeparator.m */,
+				7D27526F1696A57700556A71 /* XNTableViewController.h */,
+				7D2752701696A57700556A71 /* XNTableViewController.m */,
+				7D2752711696A57700556A71 /* XNTableViewSection.h */,
+				7D2752721696A57700556A71 /* XNTableViewSection.m */,
+				7D2752731696A57700556A71 /* XNTableViewSectionLabel.h */,
+				7D27527F1696A5CA00556A71 /* XNTableViewSectionLabel.m */,
+			);
+			name = table;
+			sourceTree = "<group>";
+		};
 		7D2E788B16602D890006FAE5 = {
 			isa = PBXGroup;
 			children = (
@@ -137,6 +181,7 @@
 				7DA5EF86166AF1B900E6F360 /* NSObject+XNAnimation.m */,
 				7D7522F71690B6F30037FA16 /* XNScrollView.h */,
 				7D7522F81690B6F30037FA16 /* XNScrollView.m */,
+				7D2752641696A56400556A71 /* table */,
 				7D2E78A916602D890006FAE5 /* XNAppDelegate.h */,
 				7D2E78AA16602D890006FAE5 /* XNAppDelegate.m */,
 				7D2E78A116602D890006FAE5 /* Supporting Files */,
@@ -237,6 +282,13 @@
 				7DA5EF89166AF80600E6F360 /* XNAnimationLink.m in Sources */,
 				7DA5EF8B166C31D200E6F360 /* NSObject+XNKeyValueExtractor.m in Sources */,
 				7D7522F91690B6F30037FA16 /* XNScrollView.m in Sources */,
+				7D2752751696A57700556A71 /* NSIndexPath+XNTableView.m in Sources */,
+				7D2752761696A57700556A71 /* XNTableView.m in Sources */,
+				7D2752781696A57700556A71 /* XNTableViewCellSeparator.m in Sources */,
+				7D2752791696A57700556A71 /* XNTableViewController.m in Sources */,
+				7D27527A1696A57700556A71 /* XNTableViewSection.m in Sources */,
+				7D2752801696A5CB00556A71 /* XNTableViewCell.m in Sources */,
+				7D2752811696A5CB00556A71 /* XNTableViewSectionLabel.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

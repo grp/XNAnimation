@@ -313,6 +313,13 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
     //_delegateFlags._scrollViewDidScrollToTop = [_delegate respondsToSelector:@selector(scrollViewDidScrollToTop:)];
 }
 
+- (void)didAddSubview:(UIView *)subview {
+    [super didAddSubview:subview];
+
+    [self bringSubviewToFront:_horizontalScrollIndicator];
+    [self bringSubviewToFront:_verticalScrollIndicator];
+}
+
 - (CGPoint)contentOffset {
     return [self bounds].origin;
 }
@@ -563,37 +570,6 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
 #pragma mark - Computed State
 
-- (BOOL)_effectiveScrollsHorizontally {
-    CGRect bounds = [self bounds];
-    CGSize contentSize = [self contentSize];
-    UIEdgeInsets contentInset = [self contentInset];
-
-    return (contentInset.left + contentSize.width + contentInset.right > bounds.size.width);
-}
-
-- (BOOL)_effectiveScrollsVertically {
-    CGRect bounds = [self bounds];
-    CGSize contentSize = [self contentSize];
-    UIEdgeInsets contentInset = [self contentInset];
-
-    return (contentInset.top + contentSize.height + contentInset.bottom > bounds.size.height);
-}
-
-- (BOOL)_effectiveBouncesHorizontally {
-    return [self bounces] && ([self alwaysBounceHorizontal] || [self _effectiveScrollsHorizontally]);
-}
-
-- (BOOL)_effectiveBouncesVertically {
-    return [self bounces] && ([self alwaysBounceVertical] || [self _effectiveScrollsVertically]);
-}
-
-- (BOOL)_effectiveShowsHorizontalScrollIndicator {
-    return [self showsHorizontalScrollIndicator] && [self _effectiveScrollsHorizontally];
-}
-
-- (BOOL)_effectiveShowsVerticalScrollIndicator {
-    return [self showsVerticalScrollIndicator] && [self _effectiveScrollsVertically];
-}
 
 - (CGRect)_effectiveScrollBounds {
     CGRect bounds = [self bounds];
@@ -616,6 +592,36 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
     scrollBounds = UIEdgeInsetsInsetRect(scrollBounds, invertedInsets);
 
     return scrollBounds;
+}
+
+- (BOOL)_effectiveScrollsHorizontally {
+    CGRect bounds = [self bounds];
+    CGRect scrollBounds = [self _effectiveScrollBounds];
+
+    return (scrollBounds.size.width > bounds.size.width);
+}
+
+- (BOOL)_effectiveScrollsVertically {
+    CGRect bounds = [self bounds];
+    CGRect scrollBounds = [self _effectiveScrollBounds];
+
+    return (scrollBounds.size.height > bounds.size.height);
+}
+
+- (BOOL)_effectiveBouncesHorizontally {
+    return [self bounces] && ([self alwaysBounceHorizontal] || [self _effectiveScrollsHorizontally]);
+}
+
+- (BOOL)_effectiveBouncesVertically {
+    return [self bounces] && ([self alwaysBounceVertical] || [self _effectiveScrollsVertically]);
+}
+
+- (BOOL)_effectiveShowsHorizontalScrollIndicator {
+    return [self showsHorizontalScrollIndicator] && [self _effectiveScrollsHorizontally];
+}
+
+- (BOOL)_effectiveShowsVerticalScrollIndicator {
+    return [self showsVerticalScrollIndicator] && [self _effectiveScrollsVertically];
 }
 
 #pragma mark - Graphical Computation
@@ -798,6 +804,8 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
     }
 
     [indicator setFrame:frame];
+
+    [self bringSubviewToFront:indicator];
 }
 
 - (void)_layoutScrollIndicators {

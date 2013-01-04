@@ -12,6 +12,7 @@
 #import "XNKeyValueExtractor.h"
 
 #import "XNScrollView.h"
+#import "XNTableView.h"
 
 #import "NSObject+XNAnimation.h"
 
@@ -30,6 +31,8 @@
 }
 @end
 
+@interface XNAppDelegate () <XNScrollViewDelegate, XNTableViewDataSource, XNTableViewDelegate>
+@end
 
 @implementation XNAppDelegate {
     UISegmentedControl *s;
@@ -134,6 +137,14 @@ UISlider *_m, *_b, *_k;
     [sv addSubview:s];
     [self.window sendSubviewToBack:sv];
 
+    XNTableView *tv = [[XNTableView alloc] initWithFrame:CGRectMake(self.window.bounds.size.width * 1.5, self.window.bounds.size.width * 1.5, 320, 480) style:XNTableViewStylePlain];
+    [tv setIndicatorStyle:XNScrollViewIndicatorStyleDefault];
+    [tv setShowsVerticalScrollIndicator:YES];
+    [tv setDelegate:self];
+    [tv setClipsToBounds:YES];
+    [tv setDataSource:self];
+    [sv addSubview:tv];
+
     /*id a = [[XNKeyValueExtractor alloc] init];
     NSLog(@"native: %@", [sb.layer valueForKeyPath:@"transform.translation"]);
     NSLog(@"mine: %@", [a object:sb valueForKeyPath:@"transform.translation"]);
@@ -151,6 +162,26 @@ UISlider *_m, *_b, *_k;
     });
 
     return YES;
+}
+
+- (int)tableView:(XNTableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return 1000;
+}
+
+- (XNTableViewCell *)tableView:(XNTableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    XNTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"hi"];
+    if (cell == nil) cell = [[[XNTableViewCell alloc] initWithStyle:XNTableViewCellStyleDefault reuseIdentifier:@"hi"] autorelease];
+    UILabel *label = [[UILabel alloc] initWithFrame:CGRectInset([[cell contentView] bounds], 0, 1.0f)];
+    [label setBackgroundColor:[UIColor colorWithWhite:0.85f alpha:1]];
+    label.text = @"hi, i'm a table cell";
+    label.font = [UIFont boldSystemFontOfSize:22.0f];
+    label.textAlignment = NSTextAlignmentCenter;
+    [[cell contentView] addSubview:label];
+    return cell;
+}
+
+- (void)tableView:(XNTableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [[[UIAlertView alloc] initWithTitle:@"selected" message:[NSString stringWithFormat:@"selected index path %@", indexPath] delegate:nil cancelButtonTitle:@"okay" otherButtonTitles:nil, nil] show];
 }
 
 - (void)sch:(UISegmentedControl *)sc {
