@@ -16,7 +16,7 @@
 const static BOOL kXNScrollViewElasticSimpleFormula = (__IPHONE_OS_VERSION_MAX_ALLOWED < 60000);
 const static CGFloat kXNScrollViewElasticConstant = 0.55f;
 
-const static CGFloat kXNScrollViewDecelerationMinimumVelocity = 25.0f;
+const static CGFloat kXNScrollViewDecelerationMinimumVelocity = 250.0f;
 
 const CGFloat XNScrollViewDecelerationRateNormal = 0.998f;
 const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
@@ -60,28 +60,34 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 }
 
 - (void)drawRect:(CGRect)rect {
-    CGRect insideRect = CGRectInset(rect, 2.0f, 2.0f);
-    CGFloat insideShortLength = fminf(insideRect.size.width, insideRect.size.height);
-
     UIColor *lightColor = [UIColor colorWithWhite:1.0f alpha:0.5f];
+    UIColor *lightBorderColor = [UIColor colorWithWhite:1.0f alpha:0.3f];
     UIColor *darkColor = [UIColor colorWithWhite:0.0f alpha:0.5f];
 
-    if ([self indicatorStyle] == XNScrollViewIndicatorStyleWhite) {
+    CGRect barRect = CGRectInset(rect, 1.0f, 1.0f);
+    CGFloat barShortLength = fminf(barRect.size.width, barRect.size.height);
+
+    CGRect insideRect = barRect;
+    
+    if ([self indicatorStyle] == XNScrollViewIndicatorStyleDefault) {
+        insideRect = CGRectInset(insideRect, 1.0f, 1.0f);
+        [darkColor setFill];
+    } else if ([self indicatorStyle] == XNScrollViewIndicatorStyleWhite) {
+        insideRect = barRect;
         [lightColor setFill];
     } else {
+        insideRect = barRect;
         [darkColor setFill];
     }
-
+    
+    CGFloat insideShortLength = fminf(insideRect.size.width, insideRect.size.height);
     UIBezierPath *innerPath = [UIBezierPath bezierPathWithRoundedRect:insideRect cornerRadius:(insideShortLength / 2.0f)];
     [innerPath fill];
 
     if ([self indicatorStyle] == XNScrollViewIndicatorStyleDefault) {
-        CGRect outsideRect = CGRectInset(rect, 1.0f, 1.0f);
-        CGFloat outsideShortLength = fminf(outsideRect.size.width, outsideRect.size.height);
-        
-        [lightColor setFill];
-        
-        UIBezierPath *outerPath = [UIBezierPath bezierPathWithRoundedRect:outsideRect cornerRadius:(outsideShortLength / 2.0f)];
+        [lightBorderColor setFill];
+
+        UIBezierPath *outerPath = [UIBezierPath bezierPathWithRoundedRect:barRect cornerRadius:(barShortLength / 2.0f)];
         [outerPath appendPath:innerPath];
         [outerPath setUsesEvenOddFillRule:YES];
         [outerPath fill];
@@ -633,7 +639,7 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
         CGFloat range = [self bounds].size.width;
         CGFloat edge = CGRectGetMinX(scrollBounds);
         
-        CGFloat distance = fabs(offset.x - edge);
+        CGFloat distance = fabsf(offset.x - edge);
         distance = [self _elasticDistanceForDistance:distance constant:horizontalConstant range:range];
         
         offset.x = edge - distance;
@@ -641,7 +647,7 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
         CGFloat range = [self bounds].size.width;
         CGFloat edge = CGRectGetMaxX(scrollBounds);
 
-        CGFloat distance = fabs(offset.x - edge);
+        CGFloat distance = fabsf(offset.x - edge);
         distance = [self _elasticDistanceForDistance:distance constant:horizontalConstant range:range];
 
         offset.x = edge + distance;
@@ -651,7 +657,7 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
         CGFloat range = [self bounds].size.height;
         CGFloat edge = CGRectGetMinY(scrollBounds);
 
-        CGFloat distance = fabs(offset.y - edge);
+        CGFloat distance = fabsf(offset.y - edge);
         distance = [self _elasticDistanceForDistance:distance constant:verticalConstant range:range];
 
         offset.y = edge - distance;
@@ -659,7 +665,7 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
         CGFloat range = [self bounds].size.height;
         CGFloat edge = CGRectGetMaxY(scrollBounds);
 
-        CGFloat distance = fabs(offset.y - edge);
+        CGFloat distance = fabsf(offset.y - edge);
         distance = [self _elasticDistanceForDistance:distance constant:verticalConstant range:range];
 
         offset.y = edge + distance;
@@ -673,18 +679,20 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
     CGFloat minimum = kXNScrollViewIndicatorMinimumInsideLength;
 
     if (position < 0) {
-        outside = fabs(position);
+        outside = fabsf(position);
         minimum = kXNScrollViewIndicatorMinimumDimension;
     } else if (position > contentDimension) {
-        outside = fabs(position - contentDimension);
+        outside = fabsf(position - contentDimension);
         minimum = kXNScrollViewIndicatorMinimumDimension;
     }
 
     CGFloat partialDisplayed = (dimension / (contentDimension + dimension));
     CGFloat length = dimension * partialDisplayed;
-    length = fmax(length, kXNScrollViewIndicatorMinimumInsideLength);
+    
+    length = fmaxf(length, kXNScrollViewIndicatorMinimumInsideLength);
     length = length - outside;
-    length = fmax(length, minimum);
+    length = fmaxf(length, minimum);
+    
     return length;
 }
 
@@ -899,6 +907,7 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
         } else if (state == UIGestureRecognizerStateEnded) {
             CGFloat scalarVelocity = sqrtf(velocity.x * velocity.x + velocity.y * velocity.y);
             BOOL stopped = (scalarVelocity <= kXNScrollViewDecelerationMinimumVelocity);
+            
             BOOL inside = CGRectContainsPoint(scrollBounds, translation);
 
             if (!stopped || !inside) {
