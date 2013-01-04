@@ -705,10 +705,10 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 - (CGFloat)_positionForIndicatorWithDimension:(CGFloat)dimension contentDimension:(CGFloat)contentDimension position:(CGFloat)position {
     CGFloat length = [self _lengthForIndicatorWithDimension:dimension contentDimension:contentDimension position:position];
 
-    CGFloat partialPosition = (position / (contentDimension + dimension));
-    CGFloat pos = dimension * partialPosition;
+    CGFloat partialPosition = (position / contentDimension);
+    CGFloat pos = (dimension - length) * partialPosition;
     
-    if (position > contentDimension) {
+    if (pos + length > dimension) {
         pos = dimension - length;
     } else if (position < 0) {
         pos = 0;
