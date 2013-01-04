@@ -53,7 +53,7 @@ typedef NSInteger XNScrollViewIndicatorStyle;
 - (void)stopScrolling;
 
 @property (nonatomic, assign, readonly, getter=isDecelerating) BOOL decelerating; // decelerating from touch
-//@property(nonatomic, assign, readonly, getter=isTracking) BOOL tracking;
+@property(nonatomic, assign, readonly, getter=isTracking) BOOL tracking; // touch down at all
 @property (nonatomic, assign, readonly, getter=isDragging) BOOL dragging; // touching with finger
 @property (nonatomic, assign, readonly, getter=isScrolling) BOOL scrolling; // not programmatic
 

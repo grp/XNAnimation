@@ -101,17 +101,22 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 - (id)initWithTarget:(id)target action:(SEL)action scrollView:(XNScrollView *)scrollView;
 @property (nonatomic, assign, readonly) XNScrollView *scrollView;
 
+@property (nonatomic, assign, readonly, getter=isTracking) BOOL tracking;
+
 @end
 
 @implementation XNScrollViewPanGestureRecognizer {
     XNScrollView *_scrollView;
+    BOOL _tracking;
 }
 
 @synthesize scrollView = _scrollView;
+@synthesize tracking = _tracking;
 
 - (id)initWithTarget:(id)target action:(SEL)action scrollView:(XNScrollView *)scrollView {
     if ((self = [super initWithTarget:target action:action])) {
         _scrollView = scrollView;
+        _tracking = NO;
     }
 
     return self;
@@ -121,6 +126,8 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
     if ([_scrollView isDecelerating]) {
         [self setState:UIGestureRecognizerStateBegan];
     }
+
+    _tracking = YES;
 
     [super touchesBegan:touches withEvent:event];
 }
@@ -148,6 +155,18 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
             [self setState:UIGestureRecognizerStateFailed];
         }
     }
+}
+
+- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+    _tracking = NO;
+
+    [super touchesEnded:touches withEvent:event];
+}
+
+- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
+    _tracking = NO;
+
+    [super touchesCancelled:touches withEvent:event];
 }
 
 @end
@@ -399,6 +418,11 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
 - (BOOL)isScrolling {
     return _scrolling;
+}
+
+- (BOOL)isTracking {
+    XNScrollViewPanGestureRecognizer *panGestureRecognizer = (XNScrollViewPanGestureRecognizer *) [self panGestureRecognizer];
+    return [panGestureRecognizer isTracking];
 }
 
 - (BOOL)isScrollEnabled {
