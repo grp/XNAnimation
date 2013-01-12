@@ -127,6 +127,7 @@ UISlider *_m, *_b, *_k;
     sv = [[XNScrollView alloc] initWithFrame:self.window.bounds];
     [sv setIndicatorStyle:XNScrollViewIndicatorStyleDefault];
     [sv setScrollIndicatorInsets:UIEdgeInsetsMake(20, 0, 0, 0)];
+    [sv setDelegate:self];
     [sv setContentSize:CGSizeMake(self.window.bounds.size.width * 5, self.window.bounds.size.height * 5)];
     [sv setShowsHorizontalScrollIndicator:YES];
     [self.window addSubview:sv];
@@ -137,6 +138,8 @@ UISlider *_m, *_b, *_k;
     [sv addSubview:s];
     [self.window sendSubviewToBack:sv];
 
+    NSLog(@"added sv");
+
     XNTableView *tv = [[XNTableView alloc] initWithFrame:CGRectMake(self.window.bounds.size.width * 1.5, self.window.bounds.size.width * 1.5, 320, 480) style:XNTableViewStylePlain];
     [tv setIndicatorStyle:XNScrollViewIndicatorStyleDefault];
     [tv setShowsVerticalScrollIndicator:YES];
@@ -144,14 +147,6 @@ UISlider *_m, *_b, *_k;
     [tv setClipsToBounds:YES];
     [tv setDataSource:self];
     [sv addSubview:tv];
-
-    /*id a = [[XNKeyValueExtractor alloc] init];
-    NSLog(@"native: %@", [sb.layer valueForKeyPath:@"transform.translation"]);
-    NSLog(@"mine: %@", [a object:sb valueForKeyPath:@"transform.translation"]);
-    [a object:sb setValue:[NSNumber numberWithFloat:2.0] forKeyPath:@"layer.transform.scale.x"];
-    [a object:sb setValue:[NSNumber numberWithFloat:2.0] forKeyPath:@"transform.scale.x"];
-    [a object:sb setValue:[NSNumber numberWithFloat:0.5] forKeyPath:@"layer.opacity"];
-    [a object:sb setValue:[NSNumber numberWithFloat:0.5] forKeyPath:@"alpha"];*/
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1.5f * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
         [UIView animateWithDuration:0.5 animations:^{

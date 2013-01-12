@@ -52,6 +52,37 @@ const NSTimeInterval kXNAnimationDefaultDuration = 1.0;
 @synthesize duration = _duration;
 @synthesize velocity = _velocity;
 
+- (void)setFromValue:(id)fromValue {
+    [_fromValue release];
+    _fromValue = [fromValue copy];
+
+    [_fromComponents release];
+    _fromComponents = nil;
+}
+
+- (void)setToValue:(id)toValue {
+    [_toValue release];
+    _toValue = [toValue copy];
+
+    [_toComponents release];
+    _toComponents = nil;
+}
+
+- (void)setDuration:(NSTimeInterval)duration {
+    _duration = duration;
+
+    [_durations release];
+    _durations = nil;
+}
+
+- (void)setVelocity:(id)velocity {
+    [_velocity release];
+    _velocity = [velocity copy];
+
+    [_velocities release];
+    _velocities = nil;
+}
+
 #pragma mark - Lifecycle
 
 - (void)setDelegate:(id<XNAnimationDelegate>)delegate {
@@ -124,45 +155,56 @@ const NSTimeInterval kXNAnimationDefaultDuration = 1.0;
 
 #pragma mark - Animation
 
+- (void)extractUpdatedParameters {
+    if (_toComponents == nil) {
+        if (_toValue == nil) {
+            [NSException raise:@"XNAnimationInvalidParameterException" format:@"you must specify a toValue"];
+        }
+    
+        _toComponents = [[_extractor componentsForObject:_toValue] retain];
+    }
+
+    if (_fromComponents == nil) {
+        NSValue *fromValue = _fromValue;
+        if (fromValue == nil) {
+            fromValue = [[_extractor object:_target valueForKeyPath:_keyPath] copy];
+        }
+
+        _fromComponents = [[_extractor componentsForObject:fromValue] retain];
+    }
+
+    if (_velocities == nil && _durations == nil) {
+        if (_velocity != nil && !isnan(_duration)) {
+            [NSException raise:@"XNAnimationInvalidParameterException" format:@"you cannot specify both a duration and a velocity"];
+        }
+
+        if (_velocity != nil) {
+            NSArray *componentValues = [_extractor componentsForObject:_velocity];
+            _velocities = [componentValues retain];
+        } else if (!isnan(_duration)) {
+            NSTimeInterval effectiveDuration = _duration;
+
+            if (isnan(effectiveDuration)) {
+                effectiveDuration = kXNAnimationDefaultDuration;
+            }
+
+            NSMutableArray *durations = [NSMutableArray array];
+
+            for (NSUInteger i = 0; i < [_toComponents count]; i++) {
+                NSNumber *number = [NSNumber numberWithDouble:effectiveDuration];
+                [durations addObject:number];
+            }
+
+            _durations = [durations retain];
+        }
+    }
+}
+
 - (void)beginWithTarget:(id)target {
     _completed = NO;
     _target = target;
 
-    if (_toValue == nil) {
-        [NSException raise:@"XNAnimationInvalidParameterException" format:@"you must specify a toValue"];
-    }
-
-    if (_velocity != nil && !isnan(_duration)) {
-        [NSException raise:@"XNAnimationInvalidParameterException" format:@"you cannot specify both a duration and a velocity"];
-    }
-
-    NSValue *fromValue = _fromValue;
-    if (fromValue == nil) {
-        fromValue = [[_extractor object:_target valueForKeyPath:_keyPath] copy];
-    }
-
-    _fromComponents = [[_extractor componentsForObject:fromValue] retain];
-    _toComponents = [[_extractor componentsForObject:_toValue] retain];
-
-    if (_velocity != nil) {
-        NSArray *componentValues = [_extractor componentsForObject:_velocity];
-        _velocities = [componentValues retain];
-    } else if (!isnan(_duration)) {
-        NSTimeInterval effectiveDuration = _duration;
-
-        if (isnan(effectiveDuration)) {
-            effectiveDuration = kXNAnimationDefaultDuration;
-        }
-
-        NSMutableArray *durations = [NSMutableArray array];
-
-        for (NSUInteger i = 0; i < [_toComponents count]; i++) {
-            NSNumber *number = [NSNumber numberWithDouble:effectiveDuration];
-            [durations addObject:number];
-        }
-
-        _durations = [durations retain];
-    }
+    [self extractUpdatedParameters];
 
     if ([_delegate respondsToSelector:@selector(animationStarted:)]) {
         [_delegate animationStarted:self];
@@ -171,6 +213,8 @@ const NSTimeInterval kXNAnimationDefaultDuration = 1.0;
 
 - (void)simulateWithTimeInterval:(NSTimeInterval)dt {
     _elapsed += dt;
+
+    [self extractUpdatedParameters];
 
     NSArray *positions = [_timingFunction simulateWithTimeInterval:dt elapsed:_elapsed durations:_durations velocities:_velocities fromComponents:_fromComponents toComponents:_toComponents complete:&_completed];
 

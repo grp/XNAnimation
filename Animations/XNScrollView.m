@@ -6,6 +6,8 @@
 //  Copyright (c) 2012 Xuzz Productions, LLC. All rights reserved.
 //
 
+#import <QuartzCore/QuartzCore.h>
+#import <UIKit/UIKit.h>
 #import <UIKit/UIGestureRecognizerSubclass.h>
 
 #import "XNScrollView.h"
@@ -181,6 +183,9 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
     CGFloat _decelerationRate;
 
+    CGPoint _throwTranslation;
+    CGPoint _throwVelocity;
+
     XNScrollViewPanGestureRecognizer *_panGestureRecognizer;
     CGPoint _panStartContentOffset;
     XNAnimation *_scrollAnimation;
@@ -311,6 +316,7 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
 @synthesize delegate = _delegate;
 @synthesize contentSize = _contentSize;
+@synthesize contentInset = _contentInset;
 @synthesize panGestureRecognizer = _panGestureRecognizer;
 @synthesize decelerationRate = _decelerationRate;
 @synthesize indicatorStyle = _indicatorStyle;
@@ -337,6 +343,24 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
     [self bringSubviewToFront:_horizontalScrollIndicator];
     [self bringSubviewToFront:_verticalScrollIndicator];
+}
+
+- (void)setContentInset:(UIEdgeInsets)contentInset {
+    _contentInset = contentInset;
+
+    [self _updateForGeometryChange];
+}
+
+- (void)setContentSize:(CGSize)contentSize {
+    _contentSize = contentSize;
+
+    [self _updateForGeometryChange];
+}
+
+- (void)setFrame:(CGRect)frame {
+    [super setFrame:frame];
+
+    [self _updateForGeometryChange];
 }
 
 - (CGPoint)contentOffset {
@@ -390,6 +414,8 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
 - (void)setBounces:(BOOL)bounces {
     _bounces = bounces;
+
+    [self _updateForGeometryChange];
 }
 
 - (BOOL)alwaysBounceHorizontal {
@@ -398,6 +424,8 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
 - (void)setAlwaysBounceHorizontal:(BOOL)alwaysBounceHorizontal {
     _alwaysBounceHorizontal = alwaysBounceHorizontal;
+
+    [self _updateForGeometryChange];
 }
 
 - (BOOL)alwaysBounceVertical {
@@ -406,6 +434,8 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
 - (void)setAlwaysBounceVertical:(BOOL)alwaysBounceVertical {
     _alwaysBounceVertical = alwaysBounceVertical;
+
+    [self _updateForGeometryChange];
 }
 
 - (BOOL)isDecelerating {
@@ -619,17 +649,13 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 }
 
 - (BOOL)_effectiveScrollsHorizontally {
-    CGRect bounds = [self bounds];
     CGRect scrollBounds = [self _effectiveScrollBounds];
-
-    return (scrollBounds.size.width > bounds.size.width);
+    return (scrollBounds.size.width > 0);
 }
 
 - (BOOL)_effectiveScrollsVertically {
-    CGRect bounds = [self bounds];
     CGRect scrollBounds = [self _effectiveScrollBounds];
-
-    return (scrollBounds.size.height > bounds.size.height);
+    return (scrollBounds.size.height > 0);
 }
 
 - (BOOL)_effectiveBouncesHorizontally {
@@ -802,8 +828,10 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
 #pragma mark - Private Methods
 
-- (void)_layoutIndicator:(XNScrollViewIndicator *)indicator dimension:(CGFloat)dimension contentDimension:(CGFloat)contentDimension position:(CGFloat)position otherVisible:(BOOL)other otherDimension:(CGFloat)otherDimension otherOffset:(CGFloat)otherOffset insetStart:(CGFloat)insetStart insetEnd:(CGFloat)insetEnd insetOppositeStart:(CGFloat)insetOppositeStart insetOppositeEnd:(CGFloat)insetOppositeEnd rotate:(BOOL)rotate {
+- (void)_layoutIndicator:(XNScrollViewIndicator *)indicator dimension:(CGFloat)dimension contentDimension:(CGFloat)contentDimension position:(CGFloat)position startContentInset:(CGFloat)startContentInset endContentInset:(CGFloat)endContentInset otherVisible:(BOOL)other otherDimension:(CGFloat)otherDimension otherOffset:(CGFloat)otherOffset insetStart:(CGFloat)insetStart insetEnd:(CGFloat)insetEnd insetOppositeStart:(CGFloat)insetOppositeStart insetOppositeEnd:(CGFloat)insetOppositeEnd rotate:(BOOL)rotate {
     CGFloat edge = (other ? kXNScrollViewIndicatorCornerDimension : 0) + (insetStart + insetEnd);
+
+    position = position + startContentInset;
 
     CGFloat indicatorDimension = dimension - edge;
     CGFloat indicatorContentDimension = contentDimension - edge;
@@ -813,7 +841,7 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
     CGFloat pos = [self _positionForIndicatorWithDimension:indicatorDimension contentDimension:indicatorContentDimension position:indicatorPosition];
 
     CGRect frame = CGRectZero;
-    frame.origin.x = insetStart + pos + position;
+    frame.origin.x = insetStart + pos + position - startContentInset;
     frame.size.width = length;
     frame.size.height = kXNScrollViewIndicatorMinimumDimension;
     frame.origin.y = otherDimension + otherOffset - kXNScrollViewIndicatorMinimumDimension - insetOppositeEnd;
@@ -836,17 +864,18 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
     CGRect bounds = [self bounds];
     CGRect scrollBounds = [self _effectiveScrollBounds];
     CGPoint contentOffset = [self contentOffset];
+    UIEdgeInsets contentInset = [self contentInset];
     UIEdgeInsets indicatorInsets = [self scrollIndicatorInsets];
     
     BOOL horizontalVisible = [self _effectiveShowsHorizontalScrollIndicator];
     BOOL verticalVisible = [self _effectiveShowsVerticalScrollIndicator];
 
     if (horizontalVisible) {
-        [self _layoutIndicator:_horizontalScrollIndicator dimension:bounds.size.width contentDimension:scrollBounds.size.width position:contentOffset.x otherVisible:verticalVisible otherDimension:bounds.size.height otherOffset:contentOffset.y insetStart:indicatorInsets.left insetEnd:indicatorInsets.right insetOppositeStart:indicatorInsets.top insetOppositeEnd:indicatorInsets.bottom rotate:NO];
+        [self _layoutIndicator:_horizontalScrollIndicator dimension:bounds.size.width contentDimension:scrollBounds.size.width position:contentOffset.x startContentInset:contentInset.left endContentInset:contentInset.right otherVisible:verticalVisible otherDimension:bounds.size.height otherOffset:contentOffset.y insetStart:indicatorInsets.left insetEnd:indicatorInsets.right insetOppositeStart:indicatorInsets.top insetOppositeEnd:indicatorInsets.bottom rotate:NO];
     }
 
     if (verticalVisible) {
-        [self _layoutIndicator:_verticalScrollIndicator dimension:bounds.size.height contentDimension:scrollBounds.size.height position:contentOffset.y otherVisible:horizontalVisible otherDimension:bounds.size.width otherOffset:contentOffset.x insetStart:indicatorInsets.top insetEnd:indicatorInsets.bottom insetOppositeStart:indicatorInsets.left insetOppositeEnd:indicatorInsets.right rotate:YES];
+        [self _layoutIndicator:_verticalScrollIndicator dimension:bounds.size.height contentDimension:scrollBounds.size.height position:contentOffset.y startContentInset:contentInset.top endContentInset:contentInset.bottom otherVisible:horizontalVisible otherDimension:bounds.size.width otherOffset:contentOffset.x insetStart:indicatorInsets.top insetEnd:indicatorInsets.bottom insetOppositeStart:indicatorInsets.left insetOppositeEnd:indicatorInsets.right rotate:YES];
     }
 }
 
@@ -899,6 +928,47 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(_hideScrollIndicatorsAfterFlash) object:nil];
 }
 
+- (void)_updateForGeometryChange {
+    if ([self isDecelerating]) {
+        [self _updateThrowParameters];
+    }
+
+    if (![self isDragging]) {
+        CGPoint contentOffset = [self contentOffset];
+        CGRect scrollBounds = [self _effectiveScrollBounds];
+
+        if (!CGRectContainsPoint(scrollBounds, contentOffset)) {
+            contentOffset = [self _constrainContentOffset:contentOffset toScrollBounds:scrollBounds elastic:NO];
+            [self setContentOffset:contentOffset];
+        }
+    }
+}
+
+- (void)_updateThrowParameters {
+    CGRect scrollBounds = [self _effectiveScrollBounds];
+
+    NSValue *fromValue = [NSValue valueWithCGPoint:_throwTranslation];
+    NSValue *velocityValue = [NSValue valueWithCGPoint:_throwVelocity];
+    NSValue *toValue = [XNDecayTimingFunction toValueFromValue:fromValue forVelocity:velocityValue withConstant:[self decelerationRate]];
+
+    CGPoint boundedTranslation = [toValue CGPointValue];
+    boundedTranslation = [self _constrainContentOffset:boundedTranslation toScrollBounds:scrollBounds elastic:NO];
+    NSValue *boundedToValue = [NSValue valueWithCGPoint:boundedTranslation];
+
+    CGPoint minimum = CGPointMake(CGRectGetMinX(scrollBounds), CGRectGetMinY(scrollBounds));
+    NSValue *minimumValue = [NSValue valueWithCGPoint:minimum];
+    CGPoint maximum = CGPointMake(CGRectGetMaxX(scrollBounds), CGRectGetMaxY(scrollBounds));
+    NSValue *maximumValue = [NSValue valueWithCGPoint:maximum];
+    id insideValue = [XNDecayTimingFunction insideValueFromValue:fromValue toValue:boundedToValue minimumValue:minimumValue maximumValue:maximumValue];
+
+    XNDecayTimingFunction *timingFunction = (XNDecayTimingFunction *) [_scrollAnimation timingFunction];
+    [timingFunction setInsideValue:insideValue];
+
+    [_scrollAnimation setToValue:boundedToValue];
+    [_scrollAnimation setFromValue:fromValue];
+    [_scrollAnimation setVelocity:velocityValue];
+}
+
 - (void)_panFromGestureRecognizer:(UIPanGestureRecognizer *)recognizer {
     NSAssert(recognizer == _panGestureRecognizer, @"invalid recognizer");
 
@@ -943,26 +1013,10 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
             BOOL inside = CGRectContainsPoint(scrollBounds, translation);
 
             if (!stopped || !inside) {
-                NSValue *fromValue = [NSValue valueWithCGPoint:translation];
-                NSValue *velocityValue = [NSValue valueWithCGPoint:velocity];
-                NSValue *toValue = [XNDecayTimingFunction toValueFromValue:fromValue forVelocity:velocityValue withConstant:[self decelerationRate]];
-                
-                CGPoint boundedTranslation = [toValue CGPointValue];
-                boundedTranslation = [self _constrainContentOffset:boundedTranslation toScrollBounds:scrollBounds elastic:NO];
-                NSValue *boundedToValue = [NSValue valueWithCGPoint:boundedTranslation];
+                _throwVelocity = velocity;
+                _throwTranslation = translation;
 
-                CGPoint minimum = CGPointMake(CGRectGetMinX(scrollBounds), CGRectGetMinY(scrollBounds));
-                NSValue *minimumValue = [NSValue valueWithCGPoint:minimum];
-                CGPoint maximum = CGPointMake(CGRectGetMaxX(scrollBounds), CGRectGetMaxY(scrollBounds));
-                NSValue *maximumValue = [NSValue valueWithCGPoint:maximum];
-                id insideValue = [XNDecayTimingFunction insideValueFromValue:fromValue toValue:boundedToValue minimumValue:minimumValue maximumValue:maximumValue];
-
-                XNDecayTimingFunction *timingFunction = (XNDecayTimingFunction *) [_scrollAnimation timingFunction];
-                [timingFunction setInsideValue:insideValue];
-
-                [_scrollAnimation setToValue:boundedToValue];
-                [_scrollAnimation setFromValue:fromValue];
-                [_scrollAnimation setVelocity:velocityValue];
+                [self _updateThrowParameters];
 
                 _dragging = NO;
 
