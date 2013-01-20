@@ -15,9 +15,19 @@
     return copy;
 }
 
-- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed duration:(CGFloat)duration from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
-    [super simulateIndex:i elapsed:elapsed duration:duration from:from to:to complete:outComplete];
+- (CGFloat)velocityIndex:(NSUInteger)i from:(CGFloat)from to:(CGFloat)to             duration:(CGFloat)duration additional:(id)additional {
+    return (to - from) / duration;
+}
 
+- (CGFloat)durationIndex:(NSUInteger)i from:(CGFloat)from to:(CGFloat)to             velocity:(CGFloat)velocity additional:(id)additional {
+    return (to - from) / velocity;
+}
+
+- (CGFloat)toIndex:(NSUInteger)i       from:(CGFloat)from duration:(CGFloat)duration velocity:(CGFloat)velocity additional:(id)additional {
+    return from + (duration * velocity);
+}
+
+- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed from:(CGFloat)from to:(CGFloat)to             duration:(CGFloat)duration additional:(id)additional complete:(BOOL *)outComplete {
     CGFloat t = (elapsed / duration);
     CGFloat x = from + (to - from) * t;
 
@@ -28,6 +38,16 @@
         *outComplete = NO;
         return x;
     }
+}
+
+- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed from:(CGFloat)from to:(CGFloat)to             velocity:(CGFloat)velocity additional:(id)additional complete:(BOOL *)outComplete {
+    CGFloat duration = [self durationIndex:i from:from to:to velocity:velocity additional:additional];
+    return [self simulateIndex:i elapsed:elapsed from:from to:to duration:duration additional:additional complete:outComplete];
+}
+
+- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed from:(CGFloat)from duration:(CGFloat)duration velocity:(CGFloat)velocity additional:(id)additional complete:(BOOL *)outComplete {
+    CGFloat to = [self toIndex:i from:from duration:duration velocity:velocity additional:additional];
+    return [self simulateIndex:i elapsed:elapsed from:from to:to duration:duration additional:additional complete:outComplete];
 }
 
 @end

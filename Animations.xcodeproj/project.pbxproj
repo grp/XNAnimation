@@ -159,6 +159,8 @@
 		7D2E78A016602D890006FAE5 /* Animations */ = {
 			isa = PBXGroup;
 			children = (
+				7D0F0041166424A200CD4F48 /* XNKeyValueExtractor.h */,
+				7D0F0042166424A200CD4F48 /* XNKeyValueExtractor.m */,
 				7D2E78BF1660C5F60006FAE5 /* XNTimingFunction.h */,
 				7D2E78C01660C5F60006FAE5 /* XNTimingFunction.m */,
 				7D2E78C21660C6060006FAE5 /* XNSpringTimingFunction.h */,
@@ -169,8 +171,6 @@
 				7D2E78C61660C6120006FAE5 /* XNLinearTimingFunction.m */,
 				7D2E78CB1662E1AA0006FAE5 /* XNBezierTimingFunction.h */,
 				7D2E78CC1662E1AA0006FAE5 /* XNBezierTimingFunction.m */,
-				7D0F0041166424A200CD4F48 /* XNKeyValueExtractor.h */,
-				7D0F0042166424A200CD4F48 /* XNKeyValueExtractor.m */,
 				7D2E78B716602D9D0006FAE5 /* XNAnimation.h */,
 				7D2E78B816602D9D0006FAE5 /* XNAnimation.m */,
 				7D2E78BA16602DAB0006FAE5 /* XNAnimationLink.h */,

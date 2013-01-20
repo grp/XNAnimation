@@ -21,11 +21,12 @@
 @property (nonatomic, copy) NSString *keyPath; // required
 @property (nonatomic, retain) XNTimingFunction *timingFunction; // required, default bezier
 
-@property (nonatomic, assign) NSTimeInterval duration; // required, cannot set velocity
-@property (nonatomic, copy) id velocity; // required, cannot set duration
-
 @property (nonatomic, copy) id fromValue; // optional, default current state
-@property (nonatomic, copy) id toValue; // required
+
+// required: set exactly two of the following three properites
+@property (nonatomic, assign) NSTimeInterval duration;
+@property (nonatomic, copy) id velocity;
+@property (nonatomic, copy) id toValue;
 
 @property (nonatomic, assign, getter=isRemovedOnCompletion) BOOL removedOnCompletion; // default YES
 @property (nonatomic, assign) id<XNAnimationDelegate> delegate; // optional, default nil

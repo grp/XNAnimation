@@ -83,10 +83,53 @@
 
 // Not sure how this works, but it does. Found online somewhere.
 #define nCr(n, r) round(exp((lgamma(n+1)) - (lgamma(r+1) + lgamma(n-r+1))))
+#define B(n, i, t) nCr(n, i) * powf(t, i) * powf(1 - t, n - i)
 
-- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed duration:(CGFloat)duration from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
-    [super simulateIndex:i elapsed:elapsed duration:duration from:from to:to complete:outComplete];
+- (CGFloat)velocityIndex:(NSUInteger)i from:(CGFloat)from to:(CGFloat)to             duration:(CGFloat)duration additional:(id)additional {
+    CGPoint result = CGPointZero;
 
+    // calculate the derivative of the bezier curve at t=0
+
+    CGFloat t = 0;
+    NSUInteger n = [_completeControlPoints count] - 1;
+
+    for (NSUInteger i = 0; i <= n - 1; i++) {
+        NSValue *pointValue = [_completeControlPoints objectAtIndex:i];
+        CGPoint point = [pointValue CGPointValue];
+
+        NSValue *point2Value = [_completeControlPoints objectAtIndex:(i + 1)];
+        CGPoint point2 = [point2Value CGPointValue];
+
+        result.x += n * (point2.x - point.x) * B(n - 1, i, t);
+        result.y += n * (point2.y - point.y) * B(n - 1, i, t);
+    }
+
+    CGFloat v = from + (to - from) * result.y;
+
+    return v;
+}
+
+- (CGFloat)durationIndex:(NSUInteger)i from:(CGFloat)from to:(CGFloat)to             velocity:(CGFloat)velocity additional:(id)additional {
+    [NSException raise:@"XNBezierTimingFunctionException" format:@"bezier curves are defined by their control points, not velocity"];
+    return 0;
+}
+
+- (CGFloat)toIndex:(NSUInteger)i       from:(CGFloat)from duration:(CGFloat)duration velocity:(CGFloat)velocity additional:(id)additional {
+    [NSException raise:@"XNBezierTimingFunctionException" format:@"bezier curves are defined by their control points, not velocity"];
+    return 0;
+}
+
+- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed from:(CGFloat)from to:(CGFloat)to             velocity:(CGFloat)velocity additional:(id)additional complete:(BOOL *)outComplete {
+    [NSException raise:@"XNBezierTimingFunctionException" format:@"bezier curves are defined by their control points, not velocity"];
+    return 0;
+}
+
+- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed from:(CGFloat)from duration:(CGFloat)duration velocity:(CGFloat)velocity additional:(id)additional complete:(BOOL *)outComplete {
+    [NSException raise:@"XNBezierTimingFunctionException" format:@"bezier curves are defined by their control points, not velocity"];
+    return 0;
+}
+
+- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed from:(CGFloat)from to:(CGFloat)to             duration:(CGFloat)duration additional:(id)additional complete:(BOOL *)outComplete {
     CGPoint result = CGPointZero;
 
     CGFloat t = (elapsed / duration);
@@ -96,9 +139,8 @@
         NSValue *pointValue = [_completeControlPoints objectAtIndex:i];
         CGPoint point = [pointValue CGPointValue];
         
-        CGFloat b = nCr(n, i) * powf(t, i) * powf(1 - t, n - i);
-        result.x += point.x * b;
-        result.y += point.y * b;
+        result.x += point.x * B(n, i, t);
+        result.y += point.y * B(n, i, t);
     }
 
     CGFloat x = from + (to - from) * result.y;
