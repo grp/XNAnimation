@@ -680,7 +680,7 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
     if (kXNScrollViewElasticSimpleFormula) {
         distance = distance * constant;
     } else {
-        distance = (1.0 - (1.0 / ((distance * constant / range) + 1.0))) * range;
+        distance = (distance * constant * range) / (distance * constant + range);
     }
     
     return distance;
