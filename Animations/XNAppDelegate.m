@@ -206,7 +206,7 @@ UISlider *_m, *_b, *_k;
         return [XNDecayTimingFunction timingFunctionWithConstant:[sdl value]];
     } else if (i == 2) {
         *vel = NO;
-        return [XNBezierTimingFunction timingFunctionWithControlPoints:[XNBezierTimingFunction controlPointsEaseInOut]];
+        return [XNBezierTimingFunction timingFunctionWithControlPoints:[XNBezierTimingFunction controlPointsEaseIn]];
     } else if (i == 3) {
         *vel = NO;
         return [XNLinearTimingFunction timingFunction];

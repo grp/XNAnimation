@@ -8,6 +8,8 @@
 
 #import "XNBezierTimingFunction.h"
 
+const static NSInteger kXNBezierTimingFunctionNewtonsMethodIterations = 4;
+
 @implementation XNBezierTimingFunction {
     NSArray *_controlPoints;
     NSArray *_completeControlPoints;
@@ -40,7 +42,7 @@
 
 + (NSArray *)controlPointsEaseOut {
     NSValue *oneValue = [NSValue valueWithCGPoint:CGPointMake(0, 0)];
-    NSValue *twoValue = [NSValue valueWithCGPoint:CGPointMake(.58, 1.0)];
+    NSValue *twoValue = [NSValue valueWithCGPoint:CGPointMake(0.58, 1.0)];
 
     NSArray *points = [NSArray arrayWithObjects:oneValue, twoValue, nil];
     return points;
@@ -48,7 +50,7 @@
 
 + (NSArray *)controlPointsEaseInOut {
     NSValue *oneValue = [NSValue valueWithCGPoint:CGPointMake(0.42, 0)];
-    NSValue *twoValue = [NSValue valueWithCGPoint:CGPointMake(.58, 1.0)];
+    NSValue *twoValue = [NSValue valueWithCGPoint:CGPointMake(0.58, 1.0)];
 
     NSArray *points = [NSArray arrayWithObjects:oneValue, twoValue, nil];
     return points;
@@ -84,21 +86,55 @@
 // Not sure how this works, but it does. Found online somewhere.
 #define nCr(n, r) round(exp((lgamma(n+1)) - (lgamma(r+1) + lgamma(n-r+1))))
 
+- (CGPoint)bezierDerivativeAtTime:(CGFloat)t {
+    CGPoint result = CGPointZero;
+
+    NSUInteger n = [_completeControlPoints count] - 1;
+
+    for (NSUInteger i = 0; i <= (n - 1); i++) {
+        NSValue *pointValue = [_completeControlPoints objectAtIndex:i];
+        CGPoint point = [pointValue CGPointValue];
+
+        NSValue *nextPointValue = [_completeControlPoints objectAtIndex:(i + 1)];
+        CGPoint nextPoint = [nextPointValue CGPointValue];
+
+        CGFloat b = nCr((n - 1), i) * powf(t, i) * powf(1 - t, (n - 1) - i);
+        result.x += n * (nextPoint.x - point.x) * b;
+        result.y += n * (nextPoint.y - point.y) * b;
+    }
+
+    return result;
+}
+
+- (CGPoint)bezierAtTime:(CGFloat)t {
+    CGPoint result = CGPointZero;
+
+    NSUInteger n = [_completeControlPoints count] - 1;
+
+    for (NSUInteger i = 0; i <= n; i++) {
+        NSValue *pointValue = [_completeControlPoints objectAtIndex:i];
+        CGPoint point = [pointValue CGPointValue];
+
+        CGFloat b = nCr(n, i) * powf(t, i) * powf(1 - t, n - i);
+        result.x += point.x * b;
+        result.y += point.y * b;
+    }
+
+    return result;
+}
+
 - (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed duration:(CGFloat)duration from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
     [super simulateIndex:i elapsed:elapsed duration:duration from:from to:to complete:outComplete];
 
     CGPoint result = CGPointZero;
-
     CGFloat t = (elapsed / duration);
-    NSUInteger n = [_completeControlPoints count] - 1;
     
-    for (NSUInteger i = 0; i <= n; i++) {
-        NSValue *pointValue = [_completeControlPoints objectAtIndex:i];
-        CGPoint point = [pointValue CGPointValue];
-        
-        CGFloat b = nCr(n, i) * powf(t, i) * powf(1 - t, n - i);
-        result.x += point.x * b;
-        result.y += point.y * b;
+    CGFloat a = t;
+    for (NSInteger i = 0; i < kXNBezierTimingFunctionNewtonsMethodIterations; i++) {
+        result = [self bezierAtTime:a];
+        CGPoint deriv = [self bezierDerivativeAtTime:a];
+
+        a = a - ((result.x - t) / deriv.x);
     }
 
     CGFloat x = from + (to - from) * result.y;
