@@ -15,15 +15,14 @@
     return copy;
 }
 
-- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed duration:(CGFloat)duration from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
-    [super simulateIndex:i elapsed:elapsed duration:duration from:from to:to complete:outComplete];
+- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed duration:(CGFloat)duration complete:(BOOL *)outComplete {
+    [super simulateIndex:i elapsed:elapsed duration:duration complete:outComplete];
 
-    CGFloat t = (elapsed / duration);
-    CGFloat x = from + (to - from) * t;
+    CGFloat x = (elapsed / duration);
 
-    if (t >= 1.0) {
+    if (x >= 1.0) {
         *outComplete = YES;
-        return to;
+        return 1.0;
     } else {
         *outComplete = NO;
         return x;

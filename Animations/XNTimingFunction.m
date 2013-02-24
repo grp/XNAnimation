@@ -19,19 +19,19 @@
     return copy;
 }
 
-- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed duration:(CGFloat)duration from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
+- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed duration:(CGFloat)duration complete:(BOOL *)outComplete {
     if (elapsed >= duration) {
         *outComplete = YES;
-        return to;
+        return 1.0;
     } else {
         *outComplete = NO;
-        return from;
+        return 0.0;
     }
 }
 
-- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed velocity:(CGFloat)velocity from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
+- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed velocity:(CGFloat)velocity complete:(BOOL *)outComplete {
     *outComplete = YES;
-    return to;
+    return 1.0;
 }
 
 - (NSArray *)simulateWithTimeInterval:(NSTimeInterval)dt elapsed:(NSTimeInterval)elapsed durations:(NSArray *)durations velocities:(NSArray *)velocities fromComponents:(NSArray *)fromComponents toComponents:(NSArray *)toComponents complete:(BOOL *)outComplete {
@@ -53,8 +53,10 @@
     for (NSUInteger i = 0; i < [fromComponents count]; i++) {
         NSNumber *fromValue = [fromComponents objectAtIndex:i];
         NSNumber *toValue = [toComponents objectAtIndex:i];
+        
         CGFloat from = [fromValue floatValue];
         CGFloat to = [toValue floatValue];
+        CGFloat range = (to - from);
 
         BOOL complete = NO;
         CGFloat position = 0;
@@ -64,11 +66,15 @@
 
         if (velocityValue != nil) {
             CGFloat velocity = [velocityValue floatValue];
-            position = [self simulateIndex:i elapsed:elapsed velocity:velocity from:from to:to complete:&complete];
+            velocity = velocity / range;
+            if (range == 0) velocity = 0;
+            position = [self simulateIndex:i elapsed:elapsed velocity:velocity complete:&complete];
         } else if (durationValue != nil) {
             CGFloat duration = [durationValue floatValue];
-            position = [self simulateIndex:i elapsed:elapsed duration:duration from:from to:to complete:&complete];
+            position = [self simulateIndex:i elapsed:elapsed duration:duration complete:&complete];
         }
+
+        position = from + position * range;
 
         NSAssert(!isnan(position), @"position cannot be NaN");
 

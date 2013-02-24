@@ -54,7 +54,12 @@ const NSTimeInterval kXNAnimationDefaultDuration = 1.0;
 
 - (void)setFromValue:(id)fromValue {
     [_fromValue release];
-    _fromValue = [fromValue copy];
+
+    if ([fromValue respondsToSelector:@selector(copyWithZone:)]) {
+        _fromValue = [fromValue copy];
+    } else {
+        _fromValue = [fromValue retain];
+    }
 
     [_fromComponents release];
     _fromComponents = nil;
@@ -62,7 +67,12 @@ const NSTimeInterval kXNAnimationDefaultDuration = 1.0;
 
 - (void)setToValue:(id)toValue {
     [_toValue release];
-    _toValue = [toValue copy];
+    
+    if ([toValue respondsToSelector:@selector(copyWithZone:)]) {
+        _toValue = [toValue copy];
+    } else {
+        _toValue = [toValue retain];
+    }
 
     [_toComponents release];
     _toComponents = nil;
@@ -77,7 +87,12 @@ const NSTimeInterval kXNAnimationDefaultDuration = 1.0;
 
 - (void)setVelocity:(id)velocity {
     [_velocity release];
-    _velocity = [velocity copy];
+
+    if ([velocity respondsToSelector:@selector(copyWithZone:)]) {
+        _velocity = [velocity copy];
+    } else {
+        _velocity = [velocity retain];
+    }
 
     [_velocities release];
     _velocities = nil;
@@ -167,7 +182,13 @@ const NSTimeInterval kXNAnimationDefaultDuration = 1.0;
     if (_fromComponents == nil) {
         NSValue *fromValue = _fromValue;
         if (fromValue == nil) {
-            fromValue = [[_extractor object:_target valueForKeyPath:_keyPath] copy];
+            fromValue = [_extractor object:_target valueForKeyPath:_keyPath];
+
+            if ([fromValue respondsToSelector:@selector(copyWithZone:)]) {
+                fromValue = [fromValue copy];
+            } else {
+                fromValue = [fromValue retain];
+            }
         }
 
         _fromComponents = [[_extractor componentsForObject:fromValue] retain];

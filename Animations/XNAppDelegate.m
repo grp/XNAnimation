@@ -113,14 +113,14 @@ UISlider *_m, *_b, *_k;
     _b = [[UISlider alloc] initWithFrame:CGRectMake(10, self.window.bounds.size.height - 55 - h - 10 - 20, self.window.bounds.size.width - 20, 20)];
     [_b setMinimumValue:0.0];
     [_b setMaximumValue:100.0f];
-    [_b setValue:20.0f];
+    [_b setValue:30.0f];
     [_b setHidden:NO];
     [self.window addSubview:_b];
 
     _k = [[UISlider alloc] initWithFrame:CGRectMake(10, self.window.bounds.size.height - 85 - h - 10 - 20, self.window.bounds.size.width - 20, 20)];
     [_k setMinimumValue:0.0];
     [_k setMaximumValue:1000.0f];
-    [_k setValue:273.0f];
+    [_k setValue:240.0f];
     [_k setHidden:NO];
     [self.window addSubview:_k];
 
@@ -206,7 +206,7 @@ UISlider *_m, *_b, *_k;
         return [XNDecayTimingFunction timingFunctionWithConstant:[sdl value]];
     } else if (i == 2) {
         *vel = NO;
-        return [XNBezierTimingFunction timingFunctionWithControlPoints:[XNBezierTimingFunction controlPointsEaseIn]];
+        return [XNBezierTimingFunction timingFunctionWithControlPoints:[XNBezierTimingFunction controlPointsEaseInOut]];
     } else if (i == 3) {
         *vel = NO;
         return [XNLinearTimingFunction timingFunction];
@@ -226,7 +226,7 @@ UISlider *_m, *_b, *_k;
     UIView *brick = [pan view];
 
     if (pan.state == UIGestureRecognizerStateBegan || pan.state == UIGestureRecognizerStateChanged) {
-        [brick removeAllXNAnimations];
+        [brick.layer removeAllXNAnimations];
 
         CGPoint f = [brick.layer position];
         f = [pan locationInView:self.window];
@@ -241,7 +241,7 @@ UISlider *_m, *_b, *_k;
         CGPoint v = [pan velocityInView:self.window];
 
         {
-            XNAnimation *a = [[XNAnimation alloc] initWithKeyPath:@"center"];
+            XNAnimation *a = [[XNAnimation alloc] initWithKeyPath:@"position"];
 
             BOOL vel;
             XNTimingFunction *tf = [self tf:&vel];
@@ -255,7 +255,7 @@ UISlider *_m, *_b, *_k;
             if ([s selectedSegmentIndex] != 1) {
                 [a setToValue:[NSValue valueWithCGPoint:p]];
             } else {
-                id c = [brick valueForKeyPath:@"center"];
+                id c = [brick valueForKeyPath:@"position"];
                 id to = [XNDecayTimingFunction toValueFromValue:c forVelocity:[NSValue valueWithCGPoint:v] withConstant:[sdl value]];
 
                 CGPoint distance = CGPointMake(self.window.bounds.size.width / 3.0f, self.window.bounds.size.height / 3.0f);
@@ -274,7 +274,7 @@ UISlider *_m, *_b, *_k;
                 [a setToValue:to];
             }
             
-            [brick addXNAnimation:a];
+            [brick.layer addXNAnimation:a];
         }
         
         {

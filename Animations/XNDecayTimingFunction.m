@@ -13,7 +13,7 @@ const static CGFloat kXNDecayTimingFunctionTemporalSensitivity = 1000.0f;
 
 const static CGFloat kXNDecayTimingFunctionDefaultConstant = 0.998f;
 const static CGFloat kXNDecayTimingFunctionDefaultBounce = 0.99f;
-const static CGFloat kXNDecayTimingFunctionDefaultSensitivity = 0.01f;
+const static CGFloat kXNDecayTimingFunctionDefaultSensitivity = 0.001f;
 
 @implementation XNDecayTimingFunction {
     NSArray *_insideComponents;
@@ -173,8 +173,8 @@ static CGFloat XNDecayTimingFunctionBouncingDistanceAtTime(CGFloat c, CGFloat b,
     return self;
 }
 
-- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed velocity:(CGFloat)velocity from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
-    [super simulateIndex:i elapsed:elapsed velocity:velocity from:from to:to complete:outComplete];
+- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed velocity:(CGFloat)velocity complete:(BOOL *)outComplete {
+    [super simulateIndex:i elapsed:elapsed velocity:velocity complete:outComplete];
 
     CGFloat c = _constant;
     CGFloat b = _bounce;
@@ -190,22 +190,22 @@ static CGFloat XNDecayTimingFunctionBouncingDistanceAtTime(CGFloat c, CGFloat b,
 
     if (outside) {
         tSwitch = 0;
-        xSwitch = from;
+        xSwitch = 0;
     } else {
-        // Solve for time when distance equals abs(to - from).
-        // from + c * v0 * (1 - powf(c, t)) / (1 - c) = to
-        // (to - from) / (c * v0) = (1 - powf(c, t)) / (1 - c)
-        // (1 - c) * (to - from) / (c * v0) = 1 - powf(c, t)
-        // -((1 - c) * (to - from) / (c * v0) - 1) = powf(c, t)
-        // t = logf(-((1 - c) * fabs(to - from) / (c * fabs(v0)) - 1)) / logf(c)
-        tSwitch = logf(-((1 - c) * fabs(to - from) / (c * fabs(v0)) - 1)) / logf(c);
+        // Solve for time when distance equals 1.0.
+        // c * v0 * (1 - powf(c, t)) / (1 - c) = 1.0
+        // 1.0 / (c * v0) = (1 - powf(c, t)) / (1 - c)
+        // (1 - c) / (c * v0) = 1 - powf(c, t)
+        // -((1 - c) / (c * v0) - 1) = powf(c, t)
+        // t = logf(-((1 - c) / (c * fabs(v0)) - 1)) / logf(c)
+        tSwitch = logf(-((1 - c) / (c * fabs(v0)) - 1)) / logf(c);
 
         if (isnan(tSwitch)) {
             // Is this the right thing to do here?
             tSwitch = CGFLOAT_MAX;
         }
         
-        xSwitch = XNDecayTimingFunctionSimpleDistanceAtTime(c, tSwitch, v0, from);
+        xSwitch = XNDecayTimingFunctionSimpleDistanceAtTime(c, tSwitch, v0, 0.0);
     }
 
     CGFloat v = 0;
@@ -213,18 +213,18 @@ static CGFloat XNDecayTimingFunctionBouncingDistanceAtTime(CGFloat c, CGFloat b,
 
     if (t < tSwitch) {
         v = XNDecayTimingFunctionSimpleVelocityAtTime(c, t, v0);
-        x = XNDecayTimingFunctionSimpleDistanceAtTime(c, t, v0, from);
+        x = XNDecayTimingFunctionSimpleDistanceAtTime(c, t, v0, 0.0);
     } else {
         CGFloat vSwitch = XNDecayTimingFunctionSimpleVelocityAtTime(c, tSwitch, v0);
         CGFloat tAfterSwitch = t - tSwitch;
         
         v = XNDecayTimingFunctionBouncingVelocityAtTime(c, b, tAfterSwitch, vSwitch);
-        x = XNDecayTimingFunctionBouncingDistanceAtTime(c, b, tAfterSwitch, vSwitch, xSwitch, to);
+        x = XNDecayTimingFunctionBouncingDistanceAtTime(c, b, tAfterSwitch, vSwitch, xSwitch, 1.0);
     }
 
-    if (fabs(v) <= _sensitivity && fabs(x - to) < _sensitivity) {
+    if (fabs(v) <= _sensitivity && fabs(x - 1.0) < _sensitivity) {
         *outComplete = YES;
-        return to;
+        return 1.0;
     } else {
         *outComplete = NO;
         return x;

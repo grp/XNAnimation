@@ -48,16 +48,14 @@ const static CGFloat kXNSpringTimingFunctionDefaultMass = 1.0f;
     return self;
 }
 
-- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed velocity:(CGFloat)velocity from:(CGFloat)from to:(CGFloat)to complete:(BOOL *)outComplete {
-    [super simulateIndex:i elapsed:elapsed velocity:velocity from:from to:to complete:outComplete];
+- (CGFloat)simulateIndex:(NSUInteger)i elapsed:(NSTimeInterval)elapsed velocity:(CGFloat)velocity complete:(BOOL *)outComplete {
+    [super simulateIndex:i elapsed:elapsed velocity:velocity complete:outComplete];
+
+    CGFloat v0 = -velocity;
+    CGFloat x0 = 1.0;
 
     CGFloat t = elapsed;
 
-    // The equation below is springing around zero, so invert it.
-    CGFloat xF = (to - from);
-
-    CGFloat x0 = xF;
-    CGFloat v0 = -velocity;
     CGFloat w0 = sqrtf(_k / _m);
 
     CGFloat zeta = _b / (2 * sqrtf(_m * _k));
@@ -85,11 +83,11 @@ const static CGFloat kXNSpringTimingFunctionDefaultMass = 1.0f;
         x = A * powf(M_E, gM * t) + B * powf(M_E, gP * t);
     }
 
-    x = from + (xF - x);
+    x = 1.0 - x;
 
-    if (fabs(x - to) <= 0.01) {
+    if (fabs(x - 1.0) <= 0.001) {
         *outComplete = YES;
-        return to;
+        return 1.0;
     } else {
         *outComplete = NO;
         return x;
