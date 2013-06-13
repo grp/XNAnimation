@@ -19,13 +19,16 @@ const static BOOL kXNScrollViewElasticSimpleFormula = (__IPHONE_OS_VERSION_MAX_A
 const static CGFloat kXNScrollViewElasticConstant = 0.55f;
 
 const static CGFloat kXNScrollViewDecelerationMinimumVelocity = 250.0f;
+const static CGFloat kXNScrollViewDecelerationCurrentVelocityFactor = 0.25f;
 
 const CGFloat XNScrollViewDecelerationRateNormal = 0.998f;
 const CGFloat XNScrollViewDecelerationRateFast = 0.990f;
 
 const static CGFloat kXNScrollViewIndicatorMinimumDimension = 9.0f;
+const static CGFloat kXNScrollViewIndicatorMinimumLongDimension = kXNScrollViewIndicatorMinimumDimension;
+const static CGFloat kXNScrollViewIndicatorMinimumLongDimensionDefault = 12.0f;
 const static CGFloat kXNScrollViewIndicatorMinimumInsideLength = 36.0f;
-const static CGFloat kXNScrollViewIndicatorCornerDimension = 8.0f;
+const static CGFloat kXNScrollViewIndicatorCornerDimension = 6.0f;
 const static NSTimeInterval kXNScrollViewIndicatorAnimationDuration = 0.25f;
 const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
@@ -69,16 +72,13 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
     CGRect barRect = CGRectInset(rect, 1.0f, 1.0f);
     CGFloat barShortLength = fminf(barRect.size.width, barRect.size.height);
 
-    CGRect insideRect = barRect;
+    CGRect insideRect = CGRectInset(barRect, 1.0f, 1.0f);
     
     if ([self indicatorStyle] == XNScrollViewIndicatorStyleDefault) {
-        insideRect = CGRectInset(insideRect, 1.0f, 1.0f);
         [darkColor setFill];
     } else if ([self indicatorStyle] == XNScrollViewIndicatorStyleWhite) {
-        insideRect = barRect;
         [lightColor setFill];
     } else {
-        insideRect = barRect;
         [darkColor setFill];
     }
     
@@ -185,6 +185,9 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
 
     CGPoint _throwTranslation;
     CGPoint _throwVelocity;
+
+  CGPoint _previousVelocity;
+  CGPoint _previousPreviousVelocity;
 
     XNScrollViewPanGestureRecognizer *_panGestureRecognizer;
     CGPoint _panStartContentOffset;
@@ -734,12 +737,21 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
     CGFloat outside = 0;
     CGFloat minimum = kXNScrollViewIndicatorMinimumInsideLength;
 
+
     if (position < 0) {
         outside = fabsf(position);
+
         minimum = kXNScrollViewIndicatorMinimumDimension;
+        if (_indicatorStyle == XNScrollViewIndicatorStyleDefault) {
+          minimum = kXNScrollViewIndicatorMinimumLongDimension;
+        }
     } else if (position > contentDimension) {
         outside = fabsf(position - contentDimension);
+      
         minimum = kXNScrollViewIndicatorMinimumDimension;
+        if (_indicatorStyle == XNScrollViewIndicatorStyleDefault) {
+          minimum = kXNScrollViewIndicatorMinimumLongDimension;
+        }
     }
 
     CGFloat partialDisplayed = (dimension / (contentDimension + dimension));
@@ -982,6 +994,9 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
         _dragging = YES;
         _scrolling = YES;
 
+        _previousVelocity = CGPointZero;
+        _previousPreviousVelocity = CGPointZero;
+
         [self _cancelScrollIndicatorFlash];
         [self _updateIndicatorsVisible:YES animated:NO];
 
@@ -1005,8 +1020,15 @@ const static NSTimeInterval kXNScrollViewIndicatorFlashingDuration = 0.75f;
         translation = [self _constrainContentOffset:translation toScrollBounds:scrollBounds elastic:YES];
 
         if (state == UIGestureRecognizerStateChanged) {
+            _previousVelocity = velocity;
+            _previousPreviousVelocity = _previousVelocity;
+          
             [self setContentOffset:translation];
         } else if (state == UIGestureRecognizerStateEnded) {
+            CGFloat factor = kXNScrollViewDecelerationCurrentVelocityFactor;
+            velocity.x = _previousPreviousVelocity.x * (1 - factor) + velocity.x * factor;
+            velocity.y = _previousPreviousVelocity.y *  (1 - factor) + velocity.y * factor;
+          
             CGFloat scalarVelocity = sqrtf(velocity.x * velocity.x + velocity.y * velocity.y);
             BOOL stopped = (scalarVelocity <= kXNScrollViewDecelerationMinimumVelocity);
             
